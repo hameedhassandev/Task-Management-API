@@ -16,25 +16,6 @@ namespace Task_Management_API.Controllers
                 _context = context;
         }
 
-        [HttpGet("SeedRoles")]
-        public IActionResult SeedRoles()
-        {
-            var roles = new List<Role>
-            {
-                new Role{Id = Guid.NewGuid(), Name = "Admin"},
-                new Role{Id = Guid.NewGuid(), Name = "User"}
-            };
-             _context.Roles.AddRange(roles);
-
-            var result =  _context.SaveChanges();
-            return Ok(result);
-        }
-
-        [HttpGet("GetRoles")]
-        public IActionResult GetRoles() 
-        {
-            var roles = _context.Roles.AsNoTracking().ToList();
-            return Ok(roles);
-        }
+        
     }
 }

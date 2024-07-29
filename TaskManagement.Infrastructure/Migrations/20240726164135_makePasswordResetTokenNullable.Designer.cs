@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskManagement.Infrastructure.Data;
 
@@ -11,9 +12,10 @@ using TaskManagement.Infrastructure.Data;
 namespace TaskManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240726164135_makePasswordResetTokenNullable")]
+    partial class makePasswordResetTokenNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,12 +45,6 @@ namespace TaskManagement.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime?>("BlockEndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("BlockReason")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -59,9 +55,6 @@ namespace TaskManagement.Infrastructure.Migrations
 
                     b.Property<DateTime?>("EmailVerificationTokenExpires")
                         .HasColumnType("datetime2");
-
-                    b.Property<int>("FailedLoginAttempts")
-                        .HasColumnType("int");
 
                     b.Property<string>("FirstName")
                         .IsRequired()

@@ -15,9 +15,12 @@ namespace TaskManagement.Core.Entities
         public string PasswordHash { get; set; }
         public bool IsEmailVerified { get; set; }
         public bool IsBlocked { get; set; }
+        public string? BlockReason { get; set; }
+        public DateTime? BlockEndDate { get; set; }
+        public int FailedLoginAttempts { get; set; }
         public string EmailVerificationToken { get; set; }
         public DateTime? EmailVerificationTokenExpires { get; set; }
-        public string PasswordResetToken { get; set; }
+        public string? PasswordResetToken { get; set; }
         public DateTime? PasswordResetTokenExpires { get; set; }
         public ICollection<UserRole> UserRoles { get; set; }
 
