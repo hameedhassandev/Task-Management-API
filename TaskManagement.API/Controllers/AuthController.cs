@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TaskManagement.Core.DTOs;
 using TaskManagement.Core.DTOs.Task;
+using TaskManagement.Core.DTOs.User;
 using TaskManagement.Core.Entities;
 using TaskManagement.Core.Helpers;
 using TaskManagement.Core.Services;
@@ -38,11 +39,11 @@ namespace Task_Management_API.Controllers
         {
             ValidationResult validationResult = _userValidator.Validate(userDto);
             if (!validationResult.IsValid)
-                return BadRequest(validationResult.Errors);
+                return BadRequest(ValidationHelper.MapValidationResultToProblemDetails(validationResult));
 
             var result = await _authService.RegisterAsync(userDto);
             if (!result.IsTrue)
-                return BadRequest(result.Message);
+                return BadRequest(new ProblemDetails { Title  = result.Message });
 
             return Ok(new ApiResponse<Guid> { IsSuccess = true, Message = result.Message, Data = result.Value });
         }

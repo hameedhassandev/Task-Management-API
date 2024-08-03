@@ -8,6 +8,8 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 using TaskManagement.Core.DTOs;
+using TaskManagement.Core.DTOs.Role;
+using TaskManagement.Core.DTOs.User;
 using TaskManagement.Core.Entities;
 using TaskManagement.Core.Helpers;
 using TaskManagement.Core.Repositories;
@@ -29,11 +31,10 @@ namespace TaskManagement.Core.Services
         }
         public async Task<Result<Guid>> RegisterAsync(UserDto userDto)
         {
-            if (await _userRepository.GetUserByEmailAsync(userDto.Email) is not null)
+            if (await _userRepository.IsEmailExist(userDto.Email))
                 return new Result<Guid>(false, "Email is already registered");
 
-
-            var user = new User
+            var user = new AddUserDto
             {
                 Id = Guid.NewGuid(),
                 FirstName = userDto.FirstName,
@@ -43,26 +44,33 @@ namespace TaskManagement.Core.Services
                 EmailVerificationToken = Guid.NewGuid().ToString(),
                 EmailVerificationTokenExpires = DateTime.UtcNow.AddHours(24)
             };
-
-            await _userRepository.AddUserAsync(user);
+           
+            var addUserResult =  await _userRepository.AddUserAsync(user);
+            if(!addUserResult.IsTrue)
+                return new Result<Guid>(false, "An error occurred while registering");
 
 
             var role = await _roleRepository.GetRoleByNameAsync("User");
             if (role is not null)
             {
-                var userRole = new UserRole
+                var userRole = new AddUserRoleDto
                 {
                     UserId = user.Id,
                     RoleId = role.Id
                 };
-                await _userRepository.AddUserRoleAsync(userRole);
+
+                var addUserRoleResult = await _userRepository.AddUserRoleAsync(userRole);
+                if (!addUserRoleResult.IsTrue)
+                    return new Result<Guid>(false, "An error occurred while add role to user");
             }
             else
                 return new Result<Guid>(false, "Role not found");
 
+
             //TODO:send Email verification 
 
-            return new Result<Guid>(true, "Registration successful, please verify your email", user.Id);
+
+            return new Result<Guid>(true, "Registration successful, please verify your email", addUserResult.Value);
         }
 
         public async Task<Result<LoginResponseDto>> LoginAsync(LoginDto loginDto)

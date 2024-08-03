@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TaskManagement.Core.DTOs;
 using TaskManagement.Core.DTOs.Task;
+using TaskManagement.Core.DTOs.User;
 using TaskManagement.Core.Helpers;
 using TaskManagement.Core.Repositories;
 using TaskManagement.Core.Services;

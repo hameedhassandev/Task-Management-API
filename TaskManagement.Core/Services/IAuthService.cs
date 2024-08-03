@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using TaskManagement.Core.DTOs;
+using TaskManagement.Core.DTOs.User;
 using TaskManagement.Core.Entities;
 using TaskManagement.Core.Helpers;
 using TaskManagement.Core.Repositories;

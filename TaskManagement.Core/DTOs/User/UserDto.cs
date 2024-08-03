@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using TaskManagement.Core.Entities;
 
-namespace TaskManagement.Core.DTOs
+namespace TaskManagement.Core.DTOs.User
 {
     public class UserDto
     {
