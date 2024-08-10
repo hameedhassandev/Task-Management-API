@@ -27,9 +27,20 @@ namespace TaskManagement.Core.Helpers
             Message = message;
         }
 
+        public Result(bool isTrue, string message, string errorType, T value)
+           : this(isTrue, message, value)
+        {
+            ErrorType = errorType;
+        }
+        public Result(bool isTrue, string message, string errorType)
+           : this(isTrue, message)
+        {
+            ErrorType = errorType;
+        }
         public bool IsTrue { get; set; }
         public string Message { get; set; }
         public T? Value { get; set; }
+        public string? ErrorType { get; set; }
 
     }
 }

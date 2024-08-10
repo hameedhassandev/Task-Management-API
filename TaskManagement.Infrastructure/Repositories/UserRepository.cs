@@ -10,6 +10,7 @@ using TaskManagement.Core.Entities;
 using TaskManagement.Core.Helpers;
 using TaskManagement.Core.Repositories;
 using TaskManagement.Infrastructure.Data;
+using static TaskManagement.Core.Helpers.Error;
 
 namespace TaskManagement.Infrastructure.Repositories
 {
@@ -31,9 +32,23 @@ namespace TaskManagement.Infrastructure.Repositories
             return await _context.Users.FindAsync(id);
         }
 
-        public async Task<User> GetUserByEmailAsync(string email)
+        public async Task<Result<UserInfoDto>> GetUserByEmailAsync(string email)
         {
-            return await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
+            var user = await _context.Users.Select(x => new UserInfoDto
+            {
+                UserId = x.Id,
+                IsBlocked = x.IsBlocked,
+                BlockEndDate = x.BlockEndDate,
+                BlockReason = x.BlockReason,
+                PasswordResetToken = x.PasswordResetToken,
+                PasswordResetTokenExpires = x.PasswordResetTokenExpires
+
+            }).SingleOrDefaultAsync(u => u.Email == email);
+
+            if (user is null)
+                return new Result<UserInfoDto>(false, "Invalid or expired token", Error.UserError.UserNotFound);
+
+            return new Result<UserInfoDto>(true, "User retrieval success", user);
         }
 
         public async Task<bool> IsEmailExist(string email)
@@ -67,9 +82,9 @@ namespace TaskManagement.Infrastructure.Repositories
             {
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
-                return new Result<Guid>(true, "User added successfully" , user.Id);
+                return new Result<Guid>(true, "User added successfully", user.Id);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return new Result<Guid>(false, $"An error occurred: {ex.Message}");
 
@@ -99,7 +114,7 @@ namespace TaskManagement.Infrastructure.Repositories
                 UserId = userRoleDto.UserId,
                 RoleId = userRoleDto.RoleId
             };
-         
+
             try
             {
                 _context.UserRoles.Add(userRole);
@@ -135,25 +150,92 @@ namespace TaskManagement.Infrastructure.Repositories
             return true;
         }
 
-        public async Task<User> GetUserByPasswordResetTokenAsync(string token)
+        public async Task<Result<UserInfoDto>> GetUserByPasswordResetTokenAsync(string token)
         {
-            return await _context.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
-                .SingleOrDefaultAsync(u => u.PasswordResetToken == token);
+            var user = await _context.Users.Select(x => new UserInfoDto
+            {
+                UserId = x.Id,
+                IsBlocked = x.IsBlocked,
+                BlockEndDate = x.BlockEndDate,
+                BlockReason = x.BlockReason,
+                PasswordResetToken = x.PasswordResetToken,
+                PasswordResetTokenExpires = x.PasswordResetTokenExpires
+
+            }).SingleOrDefaultAsync(u => u.PasswordResetToken == token);
+
+            if (user is null)
+                return new Result<UserInfoDto>(false, "Invalid or expired token", Error.UserError.InvalidOrExpiredToken);
+
+            return new Result<UserInfoDto>(true, "User retrieval success", user);
         }
 
-        public async Task<bool> ResetPasswordAsync(string token, string newPassword)
+        public async Task<Result<Nothing>> UpdatePasswordTokenAsync(UpdatePasswordTokenDto passwordTokenDto)
+        {
+            var user = await _context.Users.FindAsync(passwordTokenDto.UserId);
+            if (user is null)
+                return new Result<Nothing>(false, "User not found!", Error.UserError.UserNotFound);
+
+            user.PasswordResetToken = passwordTokenDto.PasswordResetToken;
+            user.PasswordResetTokenExpires = passwordTokenDto.PasswordResetTokenExpires;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return new Result<Nothing>(true, "Password token updated successfully");
+            }
+            catch (Exception ex)
+            {
+                return new Result<Nothing>(false, $"An error occurred: {ex.Message}", Error.Server.ServerError);
+            }
+        }
+
+        public async Task<Result<Nothing>> ResetPasswordAsync(string token, string newPassword)
         {
             var user = await _context.Users.SingleOrDefaultAsync(u => u.PasswordResetToken == token && u.PasswordResetTokenExpires > DateTime.UtcNow);
-            if (user == null)
-                return false;
+            if (user is null)
+                return new Result<Nothing>(false, "Invalid or expired token", Error.UserError.InvalidOrExpiredToken);
 
             user.PasswordHash = newPassword;
             user.PasswordResetToken = null;
             user.PasswordResetTokenExpires = null;
-            _context.Users.Update(user);
-            await _context.SaveChangesAsync();
 
-            return true;
+            try
+            {
+                await _context.SaveChangesAsync();
+                return new Result<Nothing>(true, "Password has been reset");
+            }
+            catch (Exception ex)
+            {
+                return new Result<Nothing>(false, $"An error occurred: {ex.Message}", Error.Server.ServerError);
+
+            }
         }
+
+        public async Task<Result<Nothing>> UnblockUserAsync(Guid userId)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user is null)
+                return new Result<Nothing>(false, "User not found!", Error.UserError.UserNotFound);
+
+            if (!user.IsBlocked)
+                return new Result<Nothing>(false, "User already unblocked!", Error.UserError.UserAlreadyUnblocked);
+
+            user.IsBlocked = false;
+            user.FailedLoginAttempts = 0;
+            user.BlockEndDate = null;
+            user.BlockReason = null;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return new Result<Nothing>(true, "user unblocked success");
+            }
+            catch (Exception ex)
+            {
+                return new Result<Nothing>(false, $"An error occurred: {ex.Message}", Error.Server.ServerError);
+
+            }
+        }
+
     }
 }

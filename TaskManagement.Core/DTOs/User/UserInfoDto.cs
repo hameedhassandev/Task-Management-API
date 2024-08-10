@@ -4,15 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TaskManagement.Core.Entities
+namespace TaskManagement.Core.DTOs.User
 {
-    public class User
+    public class UserInfoDto
     {
-        public Guid Id { get; set; }
+        public Guid UserId { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Email { get; set; }
-        public string PasswordHash { get; set; }
         public bool IsEmailVerified { get; set; }
         public bool IsBlocked { get; set; }
         public string? BlockReason { get; set; }
@@ -22,10 +21,5 @@ namespace TaskManagement.Core.Entities
         public DateTime? EmailVerificationTokenExpires { get; set; }
         public string? PasswordResetToken { get; set; }
         public DateTime? PasswordResetTokenExpires { get; set; }
-        public ICollection<UserRole> UserRoles { get; set; }
-        public ICollection<TaskAssignment> TaskAssignments { get; set; }
-        public ICollection<TeamMember>? TeamMemberships { get; set; }
-
-
     }
 }

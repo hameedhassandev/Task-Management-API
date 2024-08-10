@@ -29,7 +29,7 @@ namespace TaskManagement.Core.Services
             _roleRepository = roleRepository;
             _jwt = jwt.Value;
         }
-        public async Task<Result<Guid>> RegisterAsync(UserDto userDto)
+        public async Task<Result<Guid>> RegisterAsync(RegisterUserDto userDto)
         {
             if (await _userRepository.IsEmailExist(userDto.Email))
                 return new Result<Guid>(false, "Email is already registered");
@@ -154,64 +154,68 @@ namespace TaskManagement.Core.Services
             return new Result<bool>(true, "Email verified");
         }
 
-        public async Task<Result<string>> GeneratePasswordResetTokenAsync(ForgotPasswordRequestDto forgotPasswordDto)
+        public async Task<Result<Nothing>> GeneratePasswordResetTokenAsync(ForgotPasswordRequestDto forgotPasswordDto)
         {
-            var user = await _userRepository.GetUserByEmailAsync(forgotPasswordDto.Email);
-            if (user is null)
-                return new Result<string>(false, "User not found");
+            var userResult = await _userRepository.GetUserByEmailAsync(forgotPasswordDto.Email);
+            if (!userResult.IsTrue)
+                 return new Result<Nothing>(false, userResult.Message, userResult.ErrorType);
 
-            if (user.IsBlocked)
+            if (userResult.Value != null && userResult.Value.IsBlocked)
             {
-                if (user.BlockEndDate.HasValue && user.BlockEndDate.Value > DateTime.UtcNow)
-                    return new Result<string>(false, $"Your account is blocked due to {user.BlockReason}. Please try again after {user.BlockEndDate.Value}.");
+                if (userResult.Value.BlockEndDate.HasValue && userResult.Value.BlockEndDate.Value > DateTime.UtcNow)
+                    return new Result<Nothing>(false, $"Your account is blocked due to {userResult.Value.BlockReason}. Please try again after {userResult.Value.BlockEndDate.Value}.");
 
                 else
                 {
-                    user.IsBlocked = false;
-                    user.FailedLoginAttempts = 0;
-                    user.BlockEndDate = null;
-                    user.BlockReason = null;
-                    user.BlockEndDate = null;
+                    //unblock user
+                    var unblockResult = await _userRepository.UnblockUserAsync(userResult.Value.UserId);
+                    if (!unblockResult.IsTrue)
+                        return new Result<Nothing>(false, unblockResult.Message, unblockResult.ErrorType);
                 }
             }
 
-
-            user.PasswordResetToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
-            user.PasswordResetTokenExpires = DateTime.UtcNow.AddHours(1);
-            await _userRepository.UpdateUserAsync(user);
+            var updatePasswordTokenDto = new UpdatePasswordTokenDto
+            {
+                UserId = userResult.Value.UserId,
+                PasswordResetToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray()),
+                PasswordResetTokenExpires = DateTime.UtcNow.AddHours(1),
+            };
+            var updatePasswordTokenResult = await _userRepository.UpdatePasswordTokenAsync(updatePasswordTokenDto);
+             
+            if(!updatePasswordTokenResult.IsTrue)
+                return new Result<Nothing>(false, updatePasswordTokenResult.Message, updatePasswordTokenResult.ErrorType);
 
             //TODO:send email with token
-            return new Result<string>(true, "Password reset email sent");
+            return new Result<Nothing>(false, "Password reset and email sent");
+
         }
 
-        public async Task<Result<string>> ResetPasswordAsync(ResetPasswordRequestDto resetPasswordDto)
+        public async Task<Result<Nothing>> ResetPasswordAsync(ResetPasswordRequestDto resetPasswordDto)
         {
-            var user = await _userRepository.GetUserByPasswordResetTokenAsync(resetPasswordDto.Token);
+            var userResult = await _userRepository.GetUserByPasswordResetTokenAsync(resetPasswordDto.Token);
 
-            if (user is null)
-                return new Result<string>(false, "Invalid or expired token");
+            if (!userResult.IsTrue)
+                return new Result<Nothing>(false, userResult.Message, userResult.ErrorType);
            
-            if (user.IsBlocked)
+            if (userResult.Value != null && userResult.Value.IsBlocked)
             {
-                if (user.BlockEndDate.HasValue && user.BlockEndDate.Value > DateTime.UtcNow)
-                    return new Result<string>(false, $"Your account is blocked due to {user.BlockReason}. Please try again after {user.BlockEndDate.Value}.");
+                if (userResult.Value.BlockEndDate.HasValue && userResult.Value.BlockEndDate.Value > DateTime.UtcNow)
+                    return new Result<Nothing>(false, $"Your account is blocked due to {userResult.Value.BlockReason}. Please try again after {userResult.Value.BlockEndDate.Value}.");
 
                 else
                 {
-                    user.IsBlocked = false;
-                    user.FailedLoginAttempts = 0;
-                    user.BlockEndDate = null;
-                    user.BlockReason = null;
-                    user.BlockEndDate = null;
-                    await _userRepository.UpdateUserAsync(user);
+                    //unblock user
+                    var unblockResult = await _userRepository.UnblockUserAsync(userResult.Value.UserId);
+                    if(!unblockResult.IsTrue)
+                        return new Result<Nothing>(false, unblockResult.Message, unblockResult.ErrorType);
                 }
             }
 
             var result = await _userRepository.ResetPasswordAsync(resetPasswordDto.Token, EncryptionHelper.Encrypt(resetPasswordDto.NewPassword));
-            if (!result)
-                return new Result<string>(false, "Invalid or expired token");
+            if (!result.IsTrue)
+                return new Result<Nothing>(false, result.Message, result.ErrorType);
 
-            return new Result<string>(true, "Password has been reset");
+            return new Result<Nothing>(true, result.Message);
         }
 
         private TokenResponse GenerateJwtToken(User user)

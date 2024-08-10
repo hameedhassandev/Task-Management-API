@@ -17,13 +17,13 @@ namespace Task_Management_API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly IValidator<UserDto> _userValidator;
+        private readonly IValidator<RegisterUserDto> _userValidator;
         private readonly IValidator<LoginDto> _loginValidator;
         private readonly IValidator<ForgotPasswordRequestDto> _forgotPasswordValidator;
         private readonly IValidator<ResetPasswordRequestDto> _resetPasswordValidator;
         private readonly IValidator<TaskDto> _taskValidator;
 
-        public AuthController(IAuthService authService, IValidator<UserDto> userValidator, IValidator<LoginDto> loginValidator, IValidator<TaskDto> taskValidator,
+        public AuthController(IAuthService authService, IValidator<RegisterUserDto> userValidator, IValidator<LoginDto> loginValidator, IValidator<TaskDto> taskValidator,
             IValidator<ForgotPasswordRequestDto> forgotPasswordValidator, IValidator<ResetPasswordRequestDto> resetPasswordValidator)
         {
             _authService = authService;
@@ -35,7 +35,7 @@ namespace Task_Management_API.Controllers
         }
 
         [HttpPost("Register")]
-        public async Task<IActionResult> Register(UserDto userDto)
+        public async Task<IActionResult> Register(RegisterUserDto userDto)
         {
             ValidationResult validationResult = _userValidator.Validate(userDto);
             if (!validationResult.IsValid)
@@ -81,7 +81,7 @@ namespace Task_Management_API.Controllers
 
             var result = await _authService.GeneratePasswordResetTokenAsync(forgotPasswordDto);
             if (!result.IsTrue)
-                return BadRequest(result.Message);
+                return BadRequest(new ProblemDetails { Title = result.Message });
 
             return Ok(new ApiResponse { IsSuccess = true, Message = result.Message });
 
@@ -96,7 +96,7 @@ namespace Task_Management_API.Controllers
 
             var result = await _authService.ResetPasswordAsync(resetPasswordDto);
             if (!result.IsTrue)
-                return BadRequest(result.Message);
+                return BadRequest(new ProblemDetails { Title = result.Message });
 
             return Ok(new ApiResponse { IsSuccess = true, Message = result.Message });
         }

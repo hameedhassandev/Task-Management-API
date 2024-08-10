@@ -8,7 +8,7 @@ using TaskManagement.Core.Entities;
 
 namespace TaskManagement.Core.DTOs.User
 {
-    public class UserDto
+    public class RegisterUserDto
     {
         public string FirstName { get; set; }
         public string LastName { get; set; }
@@ -16,7 +16,7 @@ namespace TaskManagement.Core.DTOs.User
         public string Password { get; set; }
     }
 
-    public class UserValidator : AbstractValidator<UserDto>
+    public class UserValidator : AbstractValidator<RegisterUserDto>
     {
         public UserValidator()
         {
