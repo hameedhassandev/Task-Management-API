@@ -34,22 +34,26 @@ namespace TaskManagement.Infrastructure.Repositories
 
         public async Task<Result<UserInfoDto>> GetUserByEmailAsync(string email)
         {
-            var user = await _context.Users.Select(x => new UserInfoDto
-            {
-                UserId = x.Id,
-                IsBlocked = x.IsBlocked,
-                BlockEndDate = x.BlockEndDate,
-                BlockReason = x.BlockReason,
-                PasswordResetToken = x.PasswordResetToken,
-                PasswordResetTokenExpires = x.PasswordResetTokenExpires
-
-            }).SingleOrDefaultAsync(u => u.Email == email);
+            var user = await _context.Users
+                .Where(u => u.Email == email)
+                .SingleOrDefaultAsync();
 
             if (user is null)
                 return new Result<UserInfoDto>(false, "Invalid or expired token", Error.UserError.UserNotFound);
 
-            return new Result<UserInfoDto>(true, "User retrieval success", user);
+            var userInfo = new UserInfoDto
+            {
+                UserId = user.Id,
+                IsBlocked = user.IsBlocked,
+                BlockEndDate = user.BlockEndDate,
+                BlockReason = user.BlockReason,
+                PasswordResetToken = user.PasswordResetToken,
+                PasswordResetTokenExpires = user.PasswordResetTokenExpires
+            };
+
+            return new Result<UserInfoDto>(true, "User retrieval success", userInfo);
         }
+
 
         public async Task<bool> IsEmailExist(string email)
         {
@@ -152,21 +156,24 @@ namespace TaskManagement.Infrastructure.Repositories
 
         public async Task<Result<UserInfoDto>> GetUserByPasswordResetTokenAsync(string token)
         {
-            var user = await _context.Users.Select(x => new UserInfoDto
-            {
-                UserId = x.Id,
-                IsBlocked = x.IsBlocked,
-                BlockEndDate = x.BlockEndDate,
-                BlockReason = x.BlockReason,
-                PasswordResetToken = x.PasswordResetToken,
-                PasswordResetTokenExpires = x.PasswordResetTokenExpires
-
-            }).SingleOrDefaultAsync(u => u.PasswordResetToken == token);
+            var user = await _context.Users
+                        .Where(u => u.PasswordResetToken == token)
+                        .SingleOrDefaultAsync();
 
             if (user is null)
                 return new Result<UserInfoDto>(false, "Invalid or expired token", Error.UserError.InvalidOrExpiredToken);
 
-            return new Result<UserInfoDto>(true, "User retrieval success", user);
+            var userInfo = new UserInfoDto
+            {
+                UserId = user.Id,
+                IsBlocked = user.IsBlocked,
+                BlockEndDate = user.BlockEndDate,
+                BlockReason = user.BlockReason,
+                PasswordResetToken = user.PasswordResetToken,
+                PasswordResetTokenExpires = user.PasswordResetTokenExpires
+            };
+
+            return new Result<UserInfoDto>(true, "User retrieval success", userInfo);
         }
 
         public async Task<Result<Nothing>> UpdatePasswordTokenAsync(UpdatePasswordTokenDto passwordTokenDto)
