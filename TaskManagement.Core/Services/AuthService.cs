@@ -7,7 +7,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Reflection;
 using System.Security.Claims;
 using System.Text;
-using TaskManagement.Core.DTOs;
 using TaskManagement.Core.DTOs.Role;
 using TaskManagement.Core.DTOs.User;
 using TaskManagement.Core.Entities;

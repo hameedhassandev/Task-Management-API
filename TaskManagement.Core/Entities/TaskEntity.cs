@@ -13,7 +13,7 @@ namespace TaskManagement.Core.Entities
         public Guid Id { get; set; }
         public string Title { get; set; }
         public string? Description { get; set; }
-        public Helpers.TaskStatus? Status { get; set; } 
+        public Task_Status? Status { get; set; } 
         public TaskPriority? Priority { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

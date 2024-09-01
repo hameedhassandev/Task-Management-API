@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TaskManagement.Core.DTOs
+namespace TaskManagement.Core.DTOs.User
 {
     public class LoginDto
     {

@@ -3,11 +3,11 @@ using FluentValidation.Results;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using TaskManagement.Core.DTOs;
 using TaskManagement.Core.DTOs.Task;
 using TaskManagement.Core.DTOs.User;
 using TaskManagement.Core.Entities;
 using TaskManagement.Core.Helpers;
+using TaskManagement.Core.Repositories;
 using TaskManagement.Core.Services;
 
 namespace Task_Management_API.Controllers
@@ -34,7 +34,7 @@ namespace Task_Management_API.Controllers
             _resetPasswordValidator = resetPasswordValidator;
         }
 
-        [HttpPost("Register")]
+        [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterUserDto userDto)
         {
             ValidationResult validationResult = _userValidator.Validate(userDto);
@@ -48,7 +48,7 @@ namespace Task_Management_API.Controllers
             return Ok(new ApiResponse<Guid> { IsSuccess = true, Message = result.Message, Data = result.Value });
         }
 
-        [HttpPost("Login")]
+        [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto loginDto)
         {
             ValidationResult validationResult = _loginValidator.Validate(loginDto);
@@ -86,6 +86,7 @@ namespace Task_Management_API.Controllers
             return Ok(new ApiResponse { IsSuccess = true, Message = result.Message });
 
         }
+
 
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword(ResetPasswordRequestDto resetPasswordDto)

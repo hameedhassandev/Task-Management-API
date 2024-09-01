@@ -16,6 +16,12 @@ namespace TaskManagement.Core.Helpers
 
 
         }
+        public static class ProjectError
+        {
+            public const string ProjectNotFound = "project.notfound";
+            public const string ProjectAlreadyExists = "project.projectalreadyexists";
+
+        }
         public static class Server
         {
             public const string ServerError = "server.servererror";

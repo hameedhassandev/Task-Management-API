@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 namespace TaskManagement.Core.Helpers
 {
   
-    public enum TaskStatus
+    public enum Task_Status
     {
         Pending,
         InProgress,
         Completed,
         ToBePlanned,
-        MotStarted,
+        NotStarted,
         UnderReview,
         OnHold
     }
