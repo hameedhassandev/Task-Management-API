@@ -12,7 +12,7 @@ namespace Task_Management_API.Controllers
 {
     [Route("api/projects")]
     [ApiController]
-    //[Authorize]
+    [Authorize]
     public class ProjectController : ControllerBase
     {
         private readonly IProjectRepository _projectRepository;
