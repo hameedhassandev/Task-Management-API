@@ -45,7 +45,7 @@ namespace TaskManagement.Core.Services
             };
            
             var addUserResult =  await _userRepository.AddUserAsync(user);
-            if(!addUserResult.IsTrue)
+            if(!addUserResult.IsSuccessful)
                 return new Result<Guid>(false, "An error occurred while registering");
 
 
@@ -59,7 +59,7 @@ namespace TaskManagement.Core.Services
                 };
 
                 var addUserRoleResult = await _userRepository.AddUserRoleAsync(userRole);
-                if (!addUserRoleResult.IsTrue)
+                if (!addUserRoleResult.IsSuccessful)
                     return new Result<Guid>(false, "An error occurred while add role to user");
             }
             else
@@ -156,7 +156,7 @@ namespace TaskManagement.Core.Services
         public async Task<Result<Nothing>> GeneratePasswordResetTokenAsync(ForgotPasswordRequestDto forgotPasswordDto)
         {
             var userResult = await _userRepository.GetUserByEmailAsync(forgotPasswordDto.Email);
-            if (!userResult.IsTrue)
+            if (!userResult.IsSuccessful)
                  return new Result<Nothing>(false, userResult.Message, userResult.ErrorType);
 
             if (userResult.Value != null && userResult.Value.IsBlocked)
@@ -168,7 +168,7 @@ namespace TaskManagement.Core.Services
                 {
                     //unblock user
                     var unblockResult = await _userRepository.UnblockUserAsync(userResult.Value.UserId);
-                    if (!unblockResult.IsTrue)
+                    if (!unblockResult.IsSuccessful)
                         return new Result<Nothing>(false, unblockResult.Message, unblockResult.ErrorType);
                 }
             }
@@ -181,7 +181,7 @@ namespace TaskManagement.Core.Services
             };
             var updatePasswordTokenResult = await _userRepository.UpdatePasswordTokenAsync(updatePasswordTokenDto);
              
-            if(!updatePasswordTokenResult.IsTrue)
+            if(!updatePasswordTokenResult.IsSuccessful)
                 return new Result<Nothing>(false, updatePasswordTokenResult.Message, updatePasswordTokenResult.ErrorType);
 
             //TODO:send email with token
@@ -193,7 +193,7 @@ namespace TaskManagement.Core.Services
         {
             var userResult = await _userRepository.GetUserByPasswordResetTokenAsync(resetPasswordDto.Token);
 
-            if (!userResult.IsTrue)
+            if (!userResult.IsSuccessful)
                 return new Result<Nothing>(false, userResult.Message, userResult.ErrorType);
            
             if (userResult.Value != null && userResult.Value.IsBlocked)
@@ -205,13 +205,13 @@ namespace TaskManagement.Core.Services
                 {
                     //unblock user
                     var unblockResult = await _userRepository.UnblockUserAsync(userResult.Value.UserId);
-                    if(!unblockResult.IsTrue)
+                    if(!unblockResult.IsSuccessful)
                         return new Result<Nothing>(false, unblockResult.Message, unblockResult.ErrorType);
                 }
             }
 
             var result = await _userRepository.ResetPasswordAsync(resetPasswordDto.Token, EncryptionHelper.Encrypt(resetPasswordDto.NewPassword));
-            if (!result.IsTrue)
+            if (!result.IsSuccessful)
                 return new Result<Nothing>(false, result.Message, result.ErrorType);
 
             return new Result<Nothing>(true, result.Message);

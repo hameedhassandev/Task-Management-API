@@ -26,28 +26,38 @@ namespace TaskManagement.Infrastructure.Repositories
             var project = await _context.Projects.FindAsync(id);
 
             if (project is null)
-                return new Result<ProjectDto>(false, "Project not found", Error.ProjectError.ProjectNotFound);
+                return Result<ProjectDto>.Failure("Project not found", Error.ProjectError.ProjectNotFound);
 
-            return new Result<ProjectDto>(true, "Project retrieved success", new ProjectDto
+            return Result<ProjectDto>.Success("Project data returned successfully", new ProjectDto
             {
                 Id = project.Id,
-                UserId = project.UserId,
                 Name = project.Name,
                 Description = project.Description
             });
-
         }
+
+        public async Task<Result<ProjectDetailsDto>> GetProjectWithDetailsByIdAsync(Guid projectId)
+        {
+            var project = await _context.Projects
+                           .Include(p => p.Tasks)
+                           .ThenInclude(t => t.TaskAssignments)
+                           .ThenInclude(ta => ta.User)
+                           .FirstOrDefaultAsync(p => p.Id == projectId);
+
+            if (project is null)
+                return Result<ProjectDetailsDto>.Failure("Project not found", Error.ProjectError.ProjectNotFound);
+
+            return Result<ProjectDetailsDto>.Success("Project data returned successfully", mapToProjectDetails(project));
+        }
+
 
         public async Task<Result<List<ProjectDto>>> GetAllProjectsByUserIdAsync(Guid userId)
         {
-            var user = await _context.Users.Where(u => u.Id == userId).FirstOrDefaultAsync();
-            if (user is null)
-                return new Result<List<ProjectDto>>(false, "User not found", Error.UserError.UserNotFound);
+            bool userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+            if (!userExists)
+                return Result<List<ProjectDto>>.Failure("User not found", Error.UserError.UserNotFound);
 
             var projects = await _context.Projects.Where(p => p.UserId == userId).AsNoTracking().ToListAsync();
-
-            if (projects == null || !projects.Any())
-                return new Result<List<ProjectDto>>(false, "Projects not found", Error.ProjectError.ProjectNotFound);
 
             var projectDtos = projects.Select(project => new ProjectDto
             {
@@ -57,25 +67,27 @@ namespace TaskManagement.Infrastructure.Repositories
 
             }).ToList();
 
-            return new Result<List<ProjectDto>>(true, "Projects retrieved successfully", projectDtos);
+            return Result<List<ProjectDto>>.Success("Projects data returned successfully", projectDtos);
         }
 
         public async Task<Result<Guid>> AddProjectAsync(AddProjectDto projectDto)
         {
-            var user = await _context.Users.Where(u => u.Id == projectDto.UserId).FirstOrDefaultAsync();
-            if (user is null)
-                return new Result<Guid>(false, "User not found", Error.UserError.UserNotFound);
+            var userExists = await _context.Users.AnyAsync(u => u.Id == projectDto.UserId);
 
-            var projectObj = await _context.Projects
-                .Where(p => p.Name == projectDto.Name && p.UserId == projectDto.UserId)
-                .FirstOrDefaultAsync();
+            if (!userExists)
+                return Result<Guid>.Failure("User not found", Error.UserError.UserNotFound);
 
-            if (projectObj is not null)
-                return new Result<Guid>(false, "Project already exists", Error.ProjectError.ProjectAlreadyExists);
+
+            bool projectNameExists = await _context.Projects
+                .AnyAsync(p => p.Name.ToLower() == projectDto.Name.ToLower() && p.UserId == projectDto.UserId);
+
+            if (projectNameExists)
+                return Result<Guid>.Failure("Project name already exists", Error.ProjectError.ProjectAlreadyExists);
+
 
             var project = new Project
             {
-                Id = projectDto.Id,
+                Id = Guid.NewGuid(),
                 UserId = projectDto.UserId,
                 Name = projectDto.Name,
                 Description = projectDto.Description,
@@ -85,11 +97,52 @@ namespace TaskManagement.Infrastructure.Repositories
             {
                 _context.Projects.Add(project);
                 await _context.SaveChangesAsync();
-                return new Result<Guid>(true, "Project added successfully", project.Id);
+                return Result<Guid>.Success("Project created successfully", project.Id);
+
             }
             catch (Exception ex)
             {
-                return new Result<Guid>(false, $"An error occurred: {ex.Message}", Error.Server.ServerError);
+                return Result<Guid>.Failure($"An error occurred: {ex.Message}", Error.Server.ServerError);
+            }
+        }
+
+        public async Task<Result<UpdateProjectDto>> UpdateProjectAsync(UpdateProjectDto projectDto)
+        {
+            var userExists = await _context.Users.AnyAsync(u => u.Id == projectDto.UserId);
+
+            if (!userExists)
+                return Result<UpdateProjectDto>.Failure("User not found", Error.UserError.UserNotFound);
+
+            var project = await _context.Projects.Where(p => p.Id == projectDto.Id && p.UserId == projectDto.UserId)
+                                                 .FirstOrDefaultAsync();
+            if (project is null)
+                return Result<UpdateProjectDto>.Failure("Project not found", Error.ProjectError.ProjectNotFound);
+
+            bool projectNameExists = await _context.Projects
+              .AnyAsync(p => p.Name.ToLower() == projectDto.Name.ToLower() && p.UserId == projectDto.UserId);
+
+            if (projectNameExists)
+                return Result<UpdateProjectDto>.Failure("Project name already exists", Error.ProjectError.ProjectAlreadyExists);
+
+
+
+            project.Name = projectDto.Name;
+            project.Description = projectDto.Description;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Result<UpdateProjectDto>.Success("Project updated successfully", new UpdateProjectDto
+                {
+                    Id = project.Id,
+                    UserId = project.UserId,
+                    Name = project.Name,
+                    Description = project.Description,
+                });
+            }
+            catch (Exception ex)
+            {
+                return Result<UpdateProjectDto>.Failure($"An error occurred: {ex.Message}", Error.Server.ServerError);
 
             }
         }
@@ -100,30 +153,29 @@ namespace TaskManagement.Infrastructure.Repositories
             {
                 try
                 {
-                    var project = await _context.Projects
-                        .Where(p => p.Id == projectId && p.UserId == userId)
-                        .FirstOrDefaultAsync();
+                    var projectWithTasks = await _context.Projects
+                          .Include(p => p.Tasks)
+                          .FirstOrDefaultAsync(p => p.Id == projectId && p.UserId == userId);
 
-                    if (project is null)
-                        return new Result<Nothing>(false, "Project not found or you don't have permission to delete it", Error.ProjectError.ProjectNotFound);
+                    if (projectWithTasks is null)
+                        return Result<Nothing>.Failure("Project not found or you don't have permission to delete it", Error.ProjectError.ProjectNotFound);
 
-                    var relatedTasks = await _context.Tasks.Where(t => t.Id == projectId).ToListAsync();
+                    var relatedTasks = projectWithTasks.Tasks;
                     _context.RemoveRange(relatedTasks);
 
-                    _context.Remove(project);
+                    _context.Remove(projectWithTasks);
 
                     await _context.SaveChangesAsync();
 
                     await transaction.CommitAsync();
 
-                    return new Result<Nothing>(true, "The project and its associated tasks have been successfully removed");
+                    return Result<Nothing>.Success("The project and its associated tasks have been successfully removed");
 
                 }
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
-                    return new Result<Nothing>(false, $"An error occurred: {ex.Message}", Error.Server.ServerError);
-
+                    return Result<Nothing>.Failure($"An error occurred: {ex.Message}", Error.Server.ServerError);
                 }
             }
         }
@@ -136,60 +188,38 @@ namespace TaskManagement.Infrastructure.Repositories
             {
                 try
                 {
-                    var project = await _context.Projects
-                        .Where(p => p.Id == projectId && p.UserId == userId)
-                        .FirstOrDefaultAsync();
+                    var projectWithTasks = await _context.Projects
+                           .Include(p => p.Tasks)
+                           .FirstOrDefaultAsync(p => p.Id == projectId && p.UserId == userId);
 
-                    if (project is null)
-                        return new Result<Nothing>(false, "Project not found or you don't have permission to delete it", Error.ProjectError.ProjectNotFound);
 
-                    var relatedTasks = await _context.Tasks.Where(t => t.Id == projectId).ToListAsync();
+                    if (projectWithTasks is null)
+                        return Result<Nothing>.Failure("Project not found or you don't have permission to delete it", Error.ProjectError.ProjectNotFound);
+
+                    var relatedTasks = projectWithTasks.Tasks;
                     foreach (var task in relatedTasks)
                     {
                         task.ProjectId = null;
                     }
                     _context.UpdateRange(relatedTasks);
 
-                    _context.Remove(project);
+                    _context.Remove(projectWithTasks);
 
                     await _context.SaveChangesAsync();
 
                     await transaction.CommitAsync();
 
-                    return new Result<Nothing>(true, "The project has been removed and its associated tasks have been successfully disassociated");
-
+                    return Result<Nothing>.Success("The project has been removed and its associated tasks have been successfully disassociated");
                 }
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync();
-                    return new Result<Nothing>(false, $"An error occurred: {ex.Message}", Error.Server.ServerError);
+                    return Result<Nothing>.Failure($"An error occurred: {ex.Message}", Error.Server.ServerError);
 
                 }
             }
         }
 
-
-
-        public async Task<Result<ProjectDetailsDto>> GetProjectWithDetailsByIdAsync(Guid projectId)
-        {
-            var project = await _context.Projects
-           .Include(p => p.Tasks)
-           .ThenInclude(t => t.TaskAssignments)
-           .ThenInclude(ta => ta.User)
-           .FirstOrDefaultAsync(p => p.Id == projectId);
-
-            if (project is null)
-                return new Result<ProjectDetailsDto>(false, "not found");
-
-            
-                // return Result.Failure<ProjectDetailsDto>("Project not found", Error.ProjectError.ProjectNotFound);
-            
-
-            var projectDetailsDto = mapToProjectDetails(project);
-
-            return new Result<ProjectDetailsDto>(true, "success", projectDetailsDto);
-
-        }
 
         private ProjectDetailsDto mapToProjectDetails(Project project)
         {
@@ -222,6 +252,6 @@ namespace TaskManagement.Infrastructure.Repositories
                 }).ToList()
             };
         }
-    
+
     }
 }

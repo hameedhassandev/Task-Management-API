@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using TaskManagement.Core.DTOs.Project;
 using TaskManagement.Core.DTOs.Task;
 using TaskManagement.Core.DTOs.User;
 using TaskManagement.Core.Helpers;
@@ -23,6 +24,9 @@ builder.Services.AddControllers()
     fv.RegisterValidatorsFromAssemblyContaining<TaskDtoValidator>();
     fv.RegisterValidatorsFromAssemblyContaining<ForgotPasswordValidator>();
     fv.RegisterValidatorsFromAssemblyContaining<ResetPasswordValidator>();
+
+    fv.RegisterValidatorsFromAssemblyContaining<ProjectValidator>();
+    fv.RegisterValidatorsFromAssemblyContaining<UpdateProjectValidator>();
 
 });
 

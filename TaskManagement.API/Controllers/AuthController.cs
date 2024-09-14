@@ -12,7 +12,7 @@ using TaskManagement.Core.Services;
 
 namespace Task_Management_API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthController : ControllerBase
     {
@@ -21,15 +21,13 @@ namespace Task_Management_API.Controllers
         private readonly IValidator<LoginDto> _loginValidator;
         private readonly IValidator<ForgotPasswordRequestDto> _forgotPasswordValidator;
         private readonly IValidator<ResetPasswordRequestDto> _resetPasswordValidator;
-        private readonly IValidator<TaskDto> _taskValidator;
 
-        public AuthController(IAuthService authService, IValidator<RegisterUserDto> userValidator, IValidator<LoginDto> loginValidator, IValidator<TaskDto> taskValidator,
+        public AuthController(IAuthService authService, IValidator<RegisterUserDto> userValidator, IValidator<LoginDto> loginValidator,
             IValidator<ForgotPasswordRequestDto> forgotPasswordValidator, IValidator<ResetPasswordRequestDto> resetPasswordValidator)
         {
             _authService = authService;
             _userValidator = userValidator;
             _loginValidator = loginValidator;
-            _taskValidator = taskValidator;
             _forgotPasswordValidator = forgotPasswordValidator;
             _resetPasswordValidator = resetPasswordValidator;
         }
@@ -42,7 +40,7 @@ namespace Task_Management_API.Controllers
                 return BadRequest(ValidationHelper.MapValidationResultToProblemDetails(validationResult));
 
             var result = await _authService.RegisterAsync(userDto);
-            if (!result.IsTrue)
+            if (!result.IsSuccessful)
                 return BadRequest(new ProblemDetails { Title  = result.Message });
 
             return Ok(new ApiResponse<Guid> { IsSuccess = true, Message = result.Message, Data = result.Value });
@@ -56,7 +54,7 @@ namespace Task_Management_API.Controllers
                 return BadRequest(validationResult.Errors);
 
             var result = await _authService.LoginAsync(loginDto);
-            if (!result.IsTrue)
+            if (!result.IsSuccessful)
                 return BadRequest(result.Message);
 
             return Ok(new ApiResponse<LoginResponseDto> { IsSuccess = true, Message = result.Message, Data = result.Value });
@@ -66,7 +64,7 @@ namespace Task_Management_API.Controllers
         public async Task<IActionResult> VerifyEmail(string token)
         {
             var result = await _authService.VerifyEmailAsync(token);
-            if (!result.IsTrue)
+            if (!result.IsSuccessful)
                 return BadRequest(result.Message);
 
             return Ok(new ApiResponse { IsSuccess = true, Message = result.Message });
@@ -80,7 +78,7 @@ namespace Task_Management_API.Controllers
                 return BadRequest(validationResult.Errors);
 
             var result = await _authService.GeneratePasswordResetTokenAsync(forgotPasswordDto);
-            if (!result.IsTrue)
+            if (!result.IsSuccessful)
                 return BadRequest(new ProblemDetails { Title = result.Message });
 
             return Ok(new ApiResponse { IsSuccess = true, Message = result.Message });
@@ -96,7 +94,7 @@ namespace Task_Management_API.Controllers
                 return BadRequest(validationResult.Errors);
 
             var result = await _authService.ResetPasswordAsync(resetPasswordDto);
-            if (!result.IsTrue)
+            if (!result.IsSuccessful)
                 return BadRequest(new ProblemDetails { Title = result.Message });
 
             return Ok(new ApiResponse { IsSuccess = true, Message = result.Message });

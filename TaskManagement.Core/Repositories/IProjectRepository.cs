@@ -14,6 +14,7 @@ namespace TaskManagement.Core.Repositories
         Task<Result<List<ProjectDto>>> GetAllProjectsByUserIdAsync(Guid userId);
         Task<Result<ProjectDetailsDto>> GetProjectWithDetailsByIdAsync(Guid projectId);
         Task<Result<Guid>> AddProjectAsync(AddProjectDto projectDto);
+        Task<Result<UpdateProjectDto>> UpdateProjectAsync(UpdateProjectDto projectDto);
         Task<Result<Nothing>> DeleteProjectWithTasksAsync(Guid projectId, Guid userId);
         Task<Result<Nothing>> DeleteProjectAndUnlinkTasksAsync(Guid projectId, Guid userId);
     }
