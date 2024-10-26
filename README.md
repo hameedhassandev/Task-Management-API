@@ -3,4 +3,4 @@ In the task management API, users can create their own tasks, link them to proje
 
 # UML Diagram 
 
-![Task Management UML](https://github.com/user-attachments/assets/271d2977-c260-4925-a3f3-ecc3040c9199)
+![Task Management UML](https://github.com/user-attachments/assets/998e8fb0-020b-4789-91da-1266caae249c)
