@@ -17,7 +17,7 @@ namespace TaskManagement.Core.DTOs.Users
 
     public class BlockUserDto
     {
-        public Guid Id { get; set; }
+        public Guid UserId { get; set; }
         public string BlockReason { get; set; }
         public DateTime BlockEndDate { get; set; }
     }

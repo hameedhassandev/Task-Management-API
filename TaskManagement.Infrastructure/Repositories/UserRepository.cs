@@ -26,10 +26,14 @@ namespace TaskManagement.Infrastructure.Repositories
         {
             try
             {
+                bool emailExists = await _context.Users.AnyAsync(u => u.Email.ToLower() == dto.Email.ToLower());
+                if (emailExists)
+                    return Result<Guid>.Failure("Email already exists", UserError.EmailAlreadyExists);
+
                 var user = new User
                 {
                     Id = Guid.NewGuid(),
-                    Email = dto.Email,
+                    Email = dto.Email.ToLower),
                     FirstName = dto.FirstName,
                     LastName = dto.LastName,
                     PasswordHash = dto.PasswordHash,
@@ -68,16 +72,12 @@ namespace TaskManagement.Infrastructure.Repositories
             }
         }
 
-        public async Task<Result<Guid>> UpdateUserAsync(UpdateUserInfoDto dto)
-        {
-            throw new NotImplementedException();
-        }
 
         public async Task<Result<BlockUserDto>> BlockUserAsync(BlockUserDto dto)
         {
             try
             {
-                var user = await _context.Users.FindAsync(dto.Id);
+                var user = await _context.Users.FindAsync(dto.UserId);
 
                 if (user is null)
                     return Result<BlockUserDto>.Failure("User not found", UserError.UserNotFound);
@@ -89,7 +89,7 @@ namespace TaskManagement.Infrastructure.Repositories
                 await _context.SaveChangesAsync();
                 return Result<BlockUserDto>.Success("User has been blocked", new BlockUserDto
                 {
-                    Id = user.Id,
+                    UserId = user.Id,
                     BlockReason = dto.BlockReason,
                     BlockEndDate = dto.BlockEndDate,
                 });
@@ -102,6 +102,27 @@ namespace TaskManagement.Infrastructure.Repositories
 
         }
 
+        public async Task<Result<Nothing>> UnBlockUserAsync(Guid userId)
+        {
+            try
+            {
+                var user = await _context.Users.FindAsync(userId);
 
+                if (user is null)
+                    return Result<Nothing>.Failure("User not found", UserError.UserNotFound);
+
+                user.IsBlocked = false;
+                user.BlockReason = string.Empty;
+                user.BlockEndDate = null;
+                _context.Update(user);
+                await _context.SaveChangesAsync();
+                return Result<Nothing>.Success("User has been unblocked");
+
+            }
+            catch (Exception ex)
+            {
+                return Result<Nothing>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError);
+            }
+        }
     }
 }

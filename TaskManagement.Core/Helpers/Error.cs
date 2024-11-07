@@ -26,6 +26,8 @@ namespace TaskManagement.Core.Helpers
         public static class OrganizationError
         {
             public const string OrganizationNotFound = "organization.notfound";
+            public const string OrganizationNameAlreadyExists = "organization.namealreadyexists";
+
         }
 
         public static class ProjectError
