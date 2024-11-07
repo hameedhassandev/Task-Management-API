@@ -92,6 +92,13 @@ namespace TaskManagement.Infrastructure.Data
                 .HasOne(a => a.Task)
                 .WithMany(t => t.Attachments)
                 .HasForeignKey(a => a.TaskId);
+
+            // Invitation Configuration
+            modelBuilder.Entity<Invitation>()
+                .HasOne(i => i.Organizations) 
+                .WithMany(o => o.Invitations)
+                .HasForeignKey(i => i.OrganizationId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
 
     }

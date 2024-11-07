@@ -17,8 +17,9 @@ namespace TaskManagement.Core.Entities
         public DateTime CreatedAt { get; set; }
         public Guid CreatedByUserId { get; set; }
 
-        public User CreatedByUser { get; set; }
+        public User CreatedByUser { get; set; } = default!;
         public ICollection<TaskEntity> Tasks { get; set; } = default!;
+        public ICollection<Invitation> Invitations { get; set; } = default!;
         public ICollection<Project> Projects { get; set; } = default!;
         public ICollection<UserOrganization> UserOrganizations { get; set; } = default!;
     }

@@ -18,7 +18,7 @@ namespace TaskManagement.Core.Entities
         public string? EmailVerificationCode { get; set; }
         public DateTime? EmailVerificationCodeExpires { get; set; }
         public bool IsBlocked { get; set; }
-        public DateTime? BlockReason { get; set; }
+        public string? BlockReason { get; set; }
         public DateTime? BlockEndDate { get; set; }
         public int FailedLoginAttempts { get; set; }
         public DateTime? LastLoginDate { get; set; }
