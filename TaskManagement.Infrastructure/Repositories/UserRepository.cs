@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TaskManagement.Core.DTOs.Users;
+using TaskManagement.Core.DTOs.Users.Repository;
 using TaskManagement.Core.Entities;
 using TaskManagement.Core.Helpers;
 using TaskManagement.Core.Repositories;
@@ -33,7 +33,7 @@ namespace TaskManagement.Infrastructure.Repositories
                 var user = new User
                 {
                     Id = Guid.NewGuid(),
-                    Email = dto.Email.ToLower),
+                    Email = dto.Email.ToLower(),
                     FirstName = dto.FirstName,
                     LastName = dto.LastName,
                     PasswordHash = dto.PasswordHash,
@@ -64,6 +64,25 @@ namespace TaskManagement.Infrastructure.Repositories
 
 
                 return Result<bool>.Success("Email does not exist", isEmailExists);
+
+            }
+            catch (Exception ex)
+            {
+                return Result<bool>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError);
+            }
+        }
+
+        public async Task<Result<bool>> IsUserBlocked(Guid userId)
+        {
+            try
+            {
+                var isUserBlocked = await _context.Users.AnyAsync(u => u.Id == userId && u.IsBlocked);
+
+                if (isUserBlocked)
+                    return Result<bool>.Success("User is blocked", isUserBlocked);
+
+
+                return Result<bool>.Success("User already blocked", isUserBlocked);
 
             }
             catch (Exception ex)

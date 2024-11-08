@@ -39,8 +39,9 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.Configure<JWT>(builder.Configuration.GetSection("JWT"));
 
-builder.Services.AddScoped<IUserRepository,UserRepository>();
-builder.Services.AddScoped<IOrganizationRepository,OrganizationRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 
 
 var app = builder.Build();

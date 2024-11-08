@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TaskManagement.Core.DTOs.Organizations
+namespace TaskManagement.Core.DTOs.Organizations.Repository
 {
     public class UpdateOrganizationDto
     {

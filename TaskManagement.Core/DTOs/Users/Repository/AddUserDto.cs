@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TaskManagement.Core.DTOs.Users
+namespace TaskManagement.Core.DTOs.Users.Repository
 {
     public class AddUserDto
     {
@@ -15,5 +15,5 @@ namespace TaskManagement.Core.DTOs.Users
         public string EmailVerificationCode { get; set; }
         public DateTime EmailVerificationCodeExpires { get; set; }
     }
- 
+
 }
