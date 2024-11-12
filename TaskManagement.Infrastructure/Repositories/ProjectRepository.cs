@@ -166,5 +166,31 @@ namespace TaskManagement.Infrastructure.Repositories
         }
 
 
+
+        public async Task<Result<List<ProjectDto>>> GetOrganizationProjects(Guid organizationId)
+        {
+            try
+            {
+                var projects = await _context.Projects
+                         .Where(p => p.OrganizationId == organizationId)
+                         .Select(p => new ProjectDto
+                         {
+                             Id = p.Id,
+                             Name = p.Name,
+                             Description = p.Description,
+                             RelatedTaskCount = p.Tasks.Count(),
+
+                         }).ToListAsync();
+
+                return Result<List<ProjectDto>>.Success("Projects retrieved successfully", projects);
+
+            }
+            catch (Exception ex)
+            {
+                return Result<List<ProjectDto>>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError);
+            }
+
+        }
+
     }
 }

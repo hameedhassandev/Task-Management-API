@@ -14,6 +14,8 @@ namespace TaskManagement.Core.Repositories
         Task<Result<UpdateProjectDto>> UpdateProjectAsync(UpdateProjectDto dto);
         Task<Result<Nothing>> DeleteProjectWithNullifyRelationsAsync(Guid projectId);
         Task<Result<Nothing>> DeleteProjectWithRelationsAsync(Guid projectId);
+        Task<Result<List<ProjectDto>>> GetOrganizationProjects(Guid organizationId);
+
 
 
     }

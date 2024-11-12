@@ -17,5 +17,6 @@ namespace TaskManagement.Core.Repositories
         Task<Result<bool>> IsEmailExist(string email);
         Task<Result<bool>> IsUserBlocked(Guid userId);
 
+
     }
 }

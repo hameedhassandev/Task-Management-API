@@ -13,7 +13,5 @@ namespace TaskManagement.Core.Repositories
     {
         Task<Result<Guid>> AddOrganizationAsync(AddOrganizationDto dto);
         Task<Result<UpdateOrganizationDto>> UpdateOrganizationAsync(UpdateOrganizationDto dto);
-        Task<Result<List<ProjectDto>>> GetOrganizationProjects(Guid organizationId);
-        Task<Result<List<OrganizationTaskDto>>> GetOrganizationTasks(Guid organizationId);
     }
 }
