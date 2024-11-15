@@ -27,13 +27,13 @@ namespace TaskManagement.API.Controllers
             if (!result.IsSuccessful)
                 return BadRequest(new ProblemDetails
                 {
-                    Status = result.StatusCode ?? StatusCodes.Status400BadRequest,
+                    Status = result.StatusCode ?? Core.Helpers.StatusCodes.Status400BadRequest,
                     Title = result.ErrorType ?? "Bad Request",
                     Detail = result.Message,
                     Instance = HttpContext.Request.Path
                 });
 
-            return Ok(ApiResponse<Guid>.Success(result.Message, result.Value));
+            return Ok(ApiResponse<Guid>.Success(result.Message, result.Value, Core.Helpers.StatusCodes.Status201Created));
         }
     }
 }

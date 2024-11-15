@@ -13,7 +13,7 @@ namespace TaskManagement.Core.Helpers
             IsSuccessful = isSuccessful;
             Value = value;
             Message = string.Empty;
-            StatusCode = 200;
+            StatusCode = StatusCodes.Status200OK;
         }
         public Result(bool isSuccessful, string message, T value)
        : this(isSuccessful, value)

@@ -18,29 +18,28 @@ namespace TaskManagement.Core.Services.Email
         }
 
 
-        public async Task<Result<Nothing>> SendRegistrationVerificationEmailAsync(string toEmail, string fullName)
+        public async Task<Result<Nothing>> SendRegistrationVerificationEmailAsync(string toEmail, string fullName, string verificationCode)
         {
             try
             {
-                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "EmailTemplates", "RegistrationVerification.HTML");
-
+                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "EmailTemplates", "RegistrationVerification.html");
                 var placeholders = new Dictionary<string, string>
-            {
-                { "FullName", fullName },
-                { "Email", toEmail },
-            };
+                {
+                    { "FullName", fullName },
+                    { "VerificationCode", verificationCode },
+                };
 
                 var emailBodyResult = GetEmailBody(templatePath, placeholders);
                 if (!emailBodyResult.IsSuccessful)
-                    Result<Nothing>.Failure(emailBodyResult.Message, emailBodyResult.ErrorType, emailBodyResult.StatusCode ?? StatusCodes.Status400BadRequest);
+                    return Result<Nothing>.Failure(emailBodyResult.Message, emailBodyResult.ErrorType, emailBodyResult.StatusCode ?? StatusCodes.Status400BadRequest);
 
                 var sendEmailResult = await SendEmailAsync(toEmail, "Welcome to Task Management", emailBodyResult.Value);
                 if (!sendEmailResult.IsSuccessful)
-                    Result<Nothing>.Failure(sendEmailResult.Message, sendEmailResult.ErrorType, sendEmailResult.StatusCode ?? StatusCodes.Status400BadRequest);
+                    return Result<Nothing>.Failure(sendEmailResult.Message, sendEmailResult.ErrorType, sendEmailResult.StatusCode ?? StatusCodes.Status400BadRequest);
 
                 return Result<Nothing>.Success(emailBodyResult.Message);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 return Result<Nothing>.Failure($"An unexpected error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
             }
@@ -56,23 +55,27 @@ namespace TaskManagement.Core.Services.Email
                     Port = _emailSettings.Port,
                     Credentials = new NetworkCredential(_emailSettings.SenderEmail, _emailSettings.SenderPassword),
                     EnableSsl = _emailSettings.EnableSsl,
+                    
                 };
 
                 var mailMessage = new MailMessage
                 {
-                    From = new MailAddress(_emailSettings.SenderEmail),
+                    From = new MailAddress(_emailSettings.SenderEmail, _emailSettings.SenderName),
                     Subject = subject,
                     Body = body,
                     IsBodyHtml = true,
                 };
 
-                mailMessage.To.Add(toEmail);
+                mailMessage.To.Add(new MailAddress(toEmail));
 
                 await smtpClient.SendMailAsync(mailMessage);
                 return Result<Nothing>.Success($"An email was just sent to: {toEmail}");
             }
             catch (SmtpException smtpEx)
             {
+                if (smtpEx.InnerException != null)
+                    return Result<Nothing>.Failure($"Inner Exception: {smtpEx.InnerException.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
+
                 return Result<Nothing>.Failure($"SMTP error: {smtpEx.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
             }
             catch (Exception ex)

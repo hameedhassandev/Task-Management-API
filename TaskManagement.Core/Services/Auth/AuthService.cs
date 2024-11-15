@@ -42,9 +42,9 @@ namespace TaskManagement.Core.Services.Auth
             if (!addUserResult.IsSuccessful)
                 return Result<Guid>.Failure(addUserResult.Message, addUserResult.ErrorType, addUserResult.StatusCode ?? StatusCodes.Status400BadRequest);
 
-            var sendVerificationEmailResult = await _emailSenderService.SendRegistrationVerificationEmailAsync(user.Email, $"{user.FirstName} {user.LastName}");
+            var sendVerificationEmailResult = await _emailSenderService.SendRegistrationVerificationEmailAsync(user.Email, $"{user.FirstName} {user.LastName}", user.EmailVerificationCode);
             if (!sendVerificationEmailResult.IsSuccessful)
-                return Result<Guid>.Failure(sendVerificationEmailResult.Message, sendVerificationEmailResult.ErrorType, addUserResult.StatusCode ?? StatusCodes.Status400BadRequest);
+                return Result<Guid>.Failure(sendVerificationEmailResult.Message, sendVerificationEmailResult.ErrorType, sendVerificationEmailResult.StatusCode ?? StatusCodes.Status400BadRequest);
 
             return Result<Guid>.Success("User registered successfully, and the verification email was sent", addUserResult.Value);
         }

@@ -10,6 +10,6 @@ namespace TaskManagement.Core.Services.Email
     public interface IEmailSenderService
     {
         Task<Result<Nothing>> SendEmailAsync(string toEmail, string subject, string body);
-        Task<Result<Nothing>> SendRegistrationVerificationEmailAsync(string toEmail, string fullName);
+        Task<Result<Nothing>> SendRegistrationVerificationEmailAsync(string toEmail, string fullName, string verificationCode);
     }
 }

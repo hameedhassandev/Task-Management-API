@@ -21,7 +21,7 @@ namespace TaskManagement.Core.DTOs.Users.Controllers
         public required string EmailAddress { get; set; }
 
         [Required(ErrorMessage = "Password is required")]
-        [MinLength(8, ErrorMessage = "Password must be at least 8 characters long")]
+        [StringLength(16, MinimumLength = 8, ErrorMessage = "Password must be between 8 and 16 characters long")]
         [RegularExpression(@"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$", ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter, and one number")]
         public required string Password { get; set; }
 

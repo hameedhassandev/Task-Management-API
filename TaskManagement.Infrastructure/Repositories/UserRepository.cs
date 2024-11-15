@@ -60,7 +60,7 @@ namespace TaskManagement.Infrastructure.Repositories
                 var isEmailExists = await _context.Users.AnyAsync(u => u.Email == email);
 
                 if (isEmailExists)
-                    return Result<bool>.Success($"Email {email} already exists", isEmailExists);
+                    return Result<bool>.Failure($"Email {email} already exists", UserError.EmailAlreadyExists, StatusCodes.Status409Conflict);
 
 
                 return Result<bool>.Success("Email does not exist", isEmailExists);
