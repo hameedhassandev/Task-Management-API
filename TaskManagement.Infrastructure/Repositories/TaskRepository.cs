@@ -1,12 +1,19 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskManagement.Core.DTOs.Organizations.Repository;
+using TaskManagement.Core.DTOs.Shared;
+using TaskManagement.Core.Helpers;
+using TaskManagement.Core.Repositories;
+using TaskManagement.Infrastructure.Data;
+using static TaskManagement.Core.Helpers.Error;
 
 namespace TaskManagement.Infrastructure.Repositories
 {
-    class class TaskRepository : ITaskRepository
+    public class TaskRepository : ITaskRepository
     {
         private readonly AppDbContext _context;
         public TaskRepository(AppDbContext context)
@@ -69,7 +76,7 @@ namespace TaskManagement.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                return Result<List<OrganizationTaskDto>>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError);
+                return Result<List<OrganizationTaskDto>>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
             }
 
         }

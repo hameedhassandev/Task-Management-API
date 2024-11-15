@@ -28,14 +28,14 @@ namespace TaskManagement.Infrastructure.Repositories
             {
                 bool userExists = await _context.Users.AnyAsync(u => u.Id == dto.CreatedByUserId);
                 if (!userExists)
-                    return Result<Guid>.Failure("User not found", UserError.UserNotFound);
+                    return Result<Guid>.Failure("User not found", UserError.UserNotFound, StatusCodes.Status404NotFound);
 
                 Guid? organizationId = null;
                 if (dto.OrganizationId != Guid.Empty || dto.OrganizationId != null)
                 {
                     var organizationExists = await _context.Organizations.AnyAsync(x => x.Id == dto.OrganizationId);
                     if (!organizationExists)
-                        return Result<Guid>.Failure("Organization not found", OrganizationError.OrganizationNotFound);
+                        return Result<Guid>.Failure("Organization not found", OrganizationError.OrganizationNotFound, StatusCodes.Status404NotFound);
 
                     organizationId = dto.OrganizationId;
                 }
@@ -58,7 +58,7 @@ namespace TaskManagement.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                return Result<Guid>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError);
+                return Result<Guid>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
             }
         }
 
@@ -69,7 +69,7 @@ namespace TaskManagement.Infrastructure.Repositories
             {
                 var project = await _context.Projects.FindAsync(dto.Id);
                 if (project is null)
-                    return Result<UpdateProjectDto>.Failure("Project not found", ProjectError.ProjectNotFound);
+                    return Result<UpdateProjectDto>.Failure("Project not found", ProjectError.ProjectNotFound, StatusCodes.Status404NotFound);
 
                 project.Name = dto.Name;
                 project.Description = dto.Description;
@@ -86,7 +86,7 @@ namespace TaskManagement.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                return Result<UpdateProjectDto>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError);
+                return Result<UpdateProjectDto>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
             }
         }
 
@@ -101,7 +101,7 @@ namespace TaskManagement.Infrastructure.Repositories
                              .FirstOrDefaultAsync(p => p.Id == projectId);
 
                     if (project is null)
-                        return Result<Nothing>.Failure("Project not found", ProjectError.ProjectNotFound);
+                        return Result<Nothing>.Failure("Project not found", ProjectError.ProjectNotFound, StatusCodes.Status404NotFound);
 
 
                     var relatedTasks = project.Tasks;
@@ -125,7 +125,7 @@ namespace TaskManagement.Infrastructure.Repositories
                 {
                     await transaction.RollbackAsync();
 
-                    return Result<Nothing>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError);
+                    return Result<Nothing>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
                 }
             }
         }
@@ -141,7 +141,7 @@ namespace TaskManagement.Infrastructure.Repositories
                              .FirstOrDefaultAsync(p => p.Id == projectId);
 
                     if (project is null)
-                        return Result<Nothing>.Failure("Project not found", ProjectError.ProjectNotFound);
+                        return Result<Nothing>.Failure("Project not found", ProjectError.ProjectNotFound, StatusCodes.Status404NotFound);
 
 
                     var relatedTasks = project.Tasks;
@@ -160,7 +160,7 @@ namespace TaskManagement.Infrastructure.Repositories
                 {
                     await transaction.RollbackAsync();
 
-                    return Result<Nothing>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError);
+                    return Result<Nothing>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
                 }
             }
         }
@@ -187,7 +187,7 @@ namespace TaskManagement.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                return Result<List<ProjectDto>>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError);
+                return Result<List<ProjectDto>>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
             }
 
         }

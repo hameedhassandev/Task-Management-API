@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using TaskManagement.Core.Helpers;
 using TaskManagement.Core.Repositories;
+using TaskManagement.Core.Services.Auth;
+using TaskManagement.Core.Services.Email;
 using TaskManagement.Infrastructure.Data;
 using TaskManagement.Infrastructure.Repositories;
 
@@ -14,6 +17,9 @@ builder.Services.AddControllers();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
+
 
 builder.Services.AddAuthentication(options =>
 {
@@ -43,6 +49,8 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
 builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEmailSenderService, EmailSenderService>();
 
 
 var app = builder.Build();

@@ -8,11 +8,11 @@ namespace TaskManagement.Core.DTOs.Users.Repository
 {
     public class AddUserDto
     {
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string Email { get; set; }
-        public string PasswordHash { get; set; }
-        public string EmailVerificationCode { get; set; }
+        public required string FirstName { get; set; }
+        public required string LastName { get; set; }
+        public required string Email { get; set; }
+        public required string PasswordHash { get; set; }
+        public required string EmailVerificationCode { get; set; }
         public DateTime EmailVerificationCodeExpires { get; set; }
     }
 

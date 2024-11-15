@@ -33,11 +33,11 @@ namespace TaskManagement.Infrastructure.Repositories
             {
                 bool userExists = await _context.Users.AnyAsync(u => u.Id == dto.CreatedByUserId);
                 if (!userExists)
-                    return Result<Guid>.Failure("User not found", UserError.UserNotFound);
+                    return Result<Guid>.Failure("User not found", UserError.UserNotFound, StatusCodes.Status404NotFound);
 
                 bool organizationExists = await _context.Organizations.AnyAsync(u => u.Name.ToLower() == dto.Name.ToLower());
                 if (organizationExists)
-                    return Result<Guid>.Failure("Organization name already exists", OrganizationError.OrganizationNameAlreadyExists);
+                    return Result<Guid>.Failure("Organization name already exists", OrganizationError.OrganizationNameAlreadyExists, StatusCodes.Status409Conflict);
 
                 var organization = new Organization
                 {
@@ -56,7 +56,7 @@ namespace TaskManagement.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                return Result<Guid>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError);
+                return Result<Guid>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
             }
         }
 
@@ -66,11 +66,11 @@ namespace TaskManagement.Infrastructure.Repositories
             {
                 var organization = await _context.Organizations.FindAsync(dto.Id);
                 if (organization is null)
-                    return Result<UpdateOrganizationDto>.Failure("Organization not found", OrganizationError.OrganizationNotFound);
+                    return Result<UpdateOrganizationDto>.Failure("Organization not found", OrganizationError.OrganizationNotFound, StatusCodes.Status404NotFound);
 
                 bool organizationExists = await _context.Organizations.AnyAsync(u => u.Name.ToLower() == dto.Name.ToLower() && u.Id != dto.Id);
                 if (organizationExists)
-                    return Result<UpdateOrganizationDto>.Failure("Organization name already exists", OrganizationError.OrganizationNameAlreadyExists);
+                    return Result<UpdateOrganizationDto>.Failure("Organization name already exists", OrganizationError.OrganizationNameAlreadyExists, StatusCodes.Status409Conflict);
 
                 organization.Name = dto.Name;
                 organization.Email = dto.Email?.ToLower();
@@ -92,7 +92,7 @@ namespace TaskManagement.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                return Result<UpdateOrganizationDto>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError);
+                return Result<UpdateOrganizationDto>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
             }
         }
 
