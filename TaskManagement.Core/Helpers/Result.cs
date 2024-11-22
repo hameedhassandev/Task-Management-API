@@ -13,7 +13,6 @@ namespace TaskManagement.Core.Helpers
             IsSuccessful = isSuccessful;
             Value = value;
             Message = string.Empty;
-            StatusCode = StatusCodes.Status200OK;
         }
         public Result(bool isSuccessful, string message, T value)
        : this(isSuccessful, value)
@@ -28,23 +27,23 @@ namespace TaskManagement.Core.Helpers
             Message = message;
         }
 
-        public Result(bool isSuccessful, string message, string errorType, T value, int statusCode)
+        public Result(bool isSuccessful, string message, Error error)
+          : this(isSuccessful, message)
+        {
+            Error = error;
+        }
+
+        public Result(bool isSuccessful, string message, T value, Error error)
            : this(isSuccessful, message, value)
         {
-            ErrorType = errorType;
-            StatusCode = statusCode;
+            Error = error;
         }
-        public Result(bool isSuccessful, string message, string errorType, int statusCode)
-           : this(isSuccessful, message)
-        {
-            ErrorType = errorType;
-            StatusCode = statusCode;
-        }
+
         public bool IsSuccessful { get; set; }
         public string Message { get; set; }
         public T? Value { get; set; }
-        public string? ErrorType { get; set; }
-        public int? StatusCode { get; set; }
+        public Error? Error { get; set; }
+     
 
         public static Result<T> Success(string message, T value)
         {
@@ -61,9 +60,9 @@ namespace TaskManagement.Core.Helpers
             return new Result<T>(false, message);
         }
 
-        public static Result<T> Failure(string message, string errorType, int statusCodes)
+        public static Result<T> Failure(string message, Error error)
         {
-            return new Result<T>(false, message, errorType, statusCodes);
+            return new Result<T>(false, message, error);
         }
     }
 }

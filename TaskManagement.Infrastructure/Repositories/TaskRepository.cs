@@ -6,10 +6,10 @@ using System.Text;
 using System.Threading.Tasks;
 using TaskManagement.Core.DTOs.Organizations.Repository;
 using TaskManagement.Core.DTOs.Shared;
+using TaskManagement.Core.DTOs.Users.Repository;
 using TaskManagement.Core.Helpers;
 using TaskManagement.Core.Repositories;
 using TaskManagement.Infrastructure.Data;
-using static TaskManagement.Core.Helpers.Error;
 
 namespace TaskManagement.Infrastructure.Repositories
 {
@@ -21,10 +21,15 @@ namespace TaskManagement.Infrastructure.Repositories
             _context = context;
         }
 
+        //make mult filter param with orgnization or user or status or project 
         public async Task<Result<List<OrganizationTaskDto>>> GetOrganizationTasks(Guid organizationId)
         {
             try
             {
+                var isOrganizationExists = await _context.Organizations.AnyAsync(o => o.Id == organizationId);
+                if (!isOrganizationExists)
+                    return Result<List<OrganizationTaskDto>>.Failure("Organization not found", Errors.OrganizationError.OrganizationNotFound);
+
                 var tasks = await _context.Tasks
                                 .Where(t => t.OrganizationId == organizationId)
                                 .Include(t => t.Project)
@@ -76,7 +81,7 @@ namespace TaskManagement.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                return Result<List<OrganizationTaskDto>>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
+                return Result<List<OrganizationTaskDto>>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
             }
 
         }

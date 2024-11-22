@@ -7,11 +7,11 @@ using System.Text;
 using System.Threading.Tasks;
 using TaskManagement.Core.DTOs.Organizations;
 using TaskManagement.Core.DTOs.Projects.Repository;
+using TaskManagement.Core.DTOs.Users.Repository;
 using TaskManagement.Core.Entities;
 using TaskManagement.Core.Helpers;
 using TaskManagement.Core.Repositories;
 using TaskManagement.Infrastructure.Data;
-using static TaskManagement.Core.Helpers.Error;
 
 namespace TaskManagement.Infrastructure.Repositories
 {
@@ -28,14 +28,14 @@ namespace TaskManagement.Infrastructure.Repositories
             {
                 bool userExists = await _context.Users.AnyAsync(u => u.Id == dto.CreatedByUserId);
                 if (!userExists)
-                    return Result<Guid>.Failure("User not found", UserError.UserNotFound, StatusCodes.Status404NotFound);
+                    return Result<Guid>.Failure("User not found", Errors.UserError.UserNotFound);
 
                 Guid? organizationId = null;
                 if (dto.OrganizationId != Guid.Empty || dto.OrganizationId != null)
                 {
                     var organizationExists = await _context.Organizations.AnyAsync(x => x.Id == dto.OrganizationId);
                     if (!organizationExists)
-                        return Result<Guid>.Failure("Organization not found", OrganizationError.OrganizationNotFound, StatusCodes.Status404NotFound);
+                        return Result<Guid>.Failure("Organization not found", Errors.OrganizationError.OrganizationNotFound);
 
                     organizationId = dto.OrganizationId;
                 }
@@ -58,7 +58,7 @@ namespace TaskManagement.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                return Result<Guid>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
+                return Result<Guid>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
             }
         }
 
@@ -69,7 +69,7 @@ namespace TaskManagement.Infrastructure.Repositories
             {
                 var project = await _context.Projects.FindAsync(dto.Id);
                 if (project is null)
-                    return Result<UpdateProjectDto>.Failure("Project not found", ProjectError.ProjectNotFound, StatusCodes.Status404NotFound);
+                    return Result<UpdateProjectDto>.Failure("Project not found", Errors.ProjectError.ProjectNotFound);
 
                 project.Name = dto.Name;
                 project.Description = dto.Description;
@@ -86,7 +86,7 @@ namespace TaskManagement.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                return Result<UpdateProjectDto>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
+                return Result<UpdateProjectDto>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
             }
         }
 
@@ -101,7 +101,7 @@ namespace TaskManagement.Infrastructure.Repositories
                              .FirstOrDefaultAsync(p => p.Id == projectId);
 
                     if (project is null)
-                        return Result<Nothing>.Failure("Project not found", ProjectError.ProjectNotFound, StatusCodes.Status404NotFound);
+                        return Result<Nothing>.Failure("Project not found", Errors.ProjectError.ProjectNotFound);
 
 
                     var relatedTasks = project.Tasks;
@@ -125,7 +125,7 @@ namespace TaskManagement.Infrastructure.Repositories
                 {
                     await transaction.RollbackAsync();
 
-                    return Result<Nothing>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
+                    return Result<Nothing>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
                 }
             }
         }
@@ -141,7 +141,7 @@ namespace TaskManagement.Infrastructure.Repositories
                              .FirstOrDefaultAsync(p => p.Id == projectId);
 
                     if (project is null)
-                        return Result<Nothing>.Failure("Project not found", ProjectError.ProjectNotFound, StatusCodes.Status404NotFound);
+                        return Result<Nothing>.Failure("Project not found", Errors.ProjectError.ProjectNotFound);
 
 
                     var relatedTasks = project.Tasks;
@@ -160,17 +160,19 @@ namespace TaskManagement.Infrastructure.Repositories
                 {
                     await transaction.RollbackAsync();
 
-                    return Result<Nothing>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
+                    return Result<Nothing>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
                 }
             }
         }
-
-
 
         public async Task<Result<List<ProjectDto>>> GetOrganizationProjects(Guid organizationId)
         {
             try
             {
+                var isOrganizationExists = await _context.Organizations.AnyAsync(o => o.Id == organizationId);
+                if (!isOrganizationExists)
+                    return Result<List<ProjectDto>>.Failure("Organization not found", Errors.OrganizationError.OrganizationNotFound);
+
                 var projects = await _context.Projects
                          .Where(p => p.OrganizationId == organizationId)
                          .Select(p => new ProjectDto
@@ -187,7 +189,7 @@ namespace TaskManagement.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                return Result<List<ProjectDto>>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
+                return Result<List<ProjectDto>>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
             }
 
         }

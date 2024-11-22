@@ -10,14 +10,14 @@ namespace TaskManagement.Core.Helpers
     {
         public T? Data { get; set; }
 
-        public static ApiResponse<T> Success(string message, T? data = default, int? statusCode = StatusCodes.Status200OK)
+        public static ApiResponse<T> Success(string message, T? data = default, int statusCode = 200)
         {
             return new ApiResponse<T>
             {
                 IsSuccess = true,
                 Message = message,
                 Data = data,
-                StatusCode = statusCode ?? StatusCodes.Status200OK
+                StatusCode = statusCode
             };
         }
     }
@@ -28,13 +28,13 @@ namespace TaskManagement.Core.Helpers
         public string Message { get; set; }
         public int? StatusCode { get; set; }
 
-        public static ApiResponse Success(string message, int? statusCode = StatusCodes.Status200OK)
+        public static ApiResponse Success(string message, int? statusCode)
         {
             return new ApiResponse
             {
                 IsSuccess = true,
                 Message = message,
-                StatusCode = statusCode ?? StatusCodes.Status200OK
+                StatusCode = statusCode ?? 200
             };
         }
     }

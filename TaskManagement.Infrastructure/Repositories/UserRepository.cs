@@ -9,7 +9,6 @@ using TaskManagement.Core.Entities;
 using TaskManagement.Core.Helpers;
 using TaskManagement.Core.Repositories;
 using TaskManagement.Infrastructure.Data;
-using static TaskManagement.Core.Helpers.Error;
 
 namespace TaskManagement.Infrastructure.Repositories
 {
@@ -28,7 +27,7 @@ namespace TaskManagement.Infrastructure.Repositories
             {
                 bool emailExists = await _context.Users.AnyAsync(u => u.Email.ToLower() == dto.Email.ToLower());
                 if (emailExists)
-                    return Result<Guid>.Failure("Email already exists", UserError.EmailAlreadyExists, StatusCodes.Status409Conflict);
+                    return Result<Guid>.Failure("Email already exists", Errors.UserError.EmailAlreadyExists);
 
                 var user = new User
                 {
@@ -48,7 +47,7 @@ namespace TaskManagement.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                return Result<Guid>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
+                return Result<Guid>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
             }
         }
 
@@ -60,7 +59,7 @@ namespace TaskManagement.Infrastructure.Repositories
                 var isEmailExists = await _context.Users.AnyAsync(u => u.Email == email);
 
                 if (isEmailExists)
-                    return Result<bool>.Failure($"Email {email} already exists", UserError.EmailAlreadyExists, StatusCodes.Status409Conflict);
+                    return Result<bool>.Failure($"Email {email} already exists", Errors.UserError.EmailAlreadyExists);
 
 
                 return Result<bool>.Success("Email does not exist", isEmailExists);
@@ -68,8 +67,46 @@ namespace TaskManagement.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                return Result<bool>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
+                return Result<bool>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
             }
+        }
+
+        public async Task<Result<List<UserOrganizationDto>>> GetAllUsersInOrganization(Guid organizationId)
+        {
+            try
+            {
+                var isOrganizationExists = await _context.Organizations.AnyAsync(o => o.Id == organizationId);
+                if (!isOrganizationExists)
+                    return Result<List<UserOrganizationDto>>.Failure("Organization not found", Errors.OrganizationError.OrganizationNotFound);
+
+                var users = _context.UserOrganizations
+                                          .Where(uo => uo.OrganizationId == organizationId)
+                                          .Include(uo => uo.User)
+                                          .Select(uo => new UserOrganizationDto
+                                          {
+                                              UserId = uo.UserId,
+                                              FirstName = uo.User.FirstName,
+                                              LastName = uo.User.LastName,
+                                              Email = uo.User.Email,
+                                              UserRole = uo.Role,
+                                              UserRoleName = uo.Role.ToString(),
+                                              LastLoginDate = uo.User.LastLoginDate,
+                                              IsBlocked = uo.User.IsBlocked,
+                                              BlockReason = uo.User.BlockReason,
+                                              BlockEndDate = uo.User.BlockEndDate,
+                                              MobileNumber = uo.User.MobileNumber,
+                                              CreatedAt = uo.User.CreatedAt,
+
+                                          }).ToList();
+
+                return Result<List<UserOrganizationDto>>.Success("Users retrieved successfully");
+
+            }
+            catch (Exception ex)
+            {
+                return Result<List<UserOrganizationDto>>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
+            }
+
         }
 
         public async Task<Result<bool>> IsUserBlocked(Guid userId)
@@ -87,7 +124,7 @@ namespace TaskManagement.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                return Result<bool>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
+                return Result<bool>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
             }
         }
 
@@ -99,7 +136,7 @@ namespace TaskManagement.Infrastructure.Repositories
                 var user = await _context.Users.FindAsync(dto.UserId);
 
                 if (user is null)
-                    return Result<BlockUserDto>.Failure("User not found", UserError.UserNotFound, StatusCodes.Status404NotFound);
+                    return Result<BlockUserDto>.Failure("User not found", Errors.UserError.UserNotFound);
 
                 user.IsBlocked = true;
                 user.BlockReason = dto.BlockReason;
@@ -116,9 +153,8 @@ namespace TaskManagement.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                return Result<BlockUserDto>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
+                return Result<BlockUserDto>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
             }
-
         }
 
         public async Task<Result<Nothing>> UnBlockUserAsync(Guid userId)
@@ -128,7 +164,7 @@ namespace TaskManagement.Infrastructure.Repositories
                 var user = await _context.Users.FindAsync(userId);
 
                 if (user is null)
-                    return Result<Nothing>.Failure("User not found", UserError.UserNotFound, StatusCodes.Status404NotFound);
+                    return Result<Nothing>.Failure("User not found", Errors.UserError.UserNotFound);
 
                 user.IsBlocked = false;
                 user.BlockReason = string.Empty;
@@ -140,9 +176,11 @@ namespace TaskManagement.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                return Result<Nothing>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
+                return Result<Nothing>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
             }
         }
-    
+
+
+
     }
 }

@@ -15,7 +15,7 @@ namespace TaskManagement.Core.DTOs.Users.Repository
         public string Email { get; set; }
         public UserRole UserRole { get; set; }
         public string UserRoleName { get; set; }
-        public string MobileNumber { get; set; }
+        public string? MobileNumber { get; set; }
         public bool IsBlocked { get; set; }
         public string? BlockReason { get; set; }
         public DateTime? BlockEndDate { get; set; }

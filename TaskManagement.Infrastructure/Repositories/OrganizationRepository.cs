@@ -14,7 +14,6 @@ using TaskManagement.Core.Entities;
 using TaskManagement.Core.Helpers;
 using TaskManagement.Core.Repositories;
 using TaskManagement.Infrastructure.Data;
-using static TaskManagement.Core.Helpers.Error;
 
 namespace TaskManagement.Infrastructure.Repositories
 {
@@ -33,11 +32,11 @@ namespace TaskManagement.Infrastructure.Repositories
             {
                 bool userExists = await _context.Users.AnyAsync(u => u.Id == dto.CreatedByUserId);
                 if (!userExists)
-                    return Result<Guid>.Failure("User not found", UserError.UserNotFound, StatusCodes.Status404NotFound);
+                    return Result<Guid>.Failure("User not found", Errors.UserError.UserNotFound);
 
                 bool organizationExists = await _context.Organizations.AnyAsync(u => u.Name.ToLower() == dto.Name.ToLower());
                 if (organizationExists)
-                    return Result<Guid>.Failure("Organization name already exists", OrganizationError.OrganizationNameAlreadyExists, StatusCodes.Status409Conflict);
+                    return Result<Guid>.Failure("Organization name already exists", Errors.OrganizationError.OrganizationNameAlreadyExists);
 
                 var organization = new Organization
                 {
@@ -56,7 +55,7 @@ namespace TaskManagement.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                return Result<Guid>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
+                return Result<Guid>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
             }
         }
 
@@ -66,11 +65,11 @@ namespace TaskManagement.Infrastructure.Repositories
             {
                 var organization = await _context.Organizations.FindAsync(dto.Id);
                 if (organization is null)
-                    return Result<UpdateOrganizationDto>.Failure("Organization not found", OrganizationError.OrganizationNotFound, StatusCodes.Status404NotFound);
+                    return Result<UpdateOrganizationDto>.Failure("Organization not found", Errors.OrganizationError.OrganizationNotFound);
 
                 bool organizationExists = await _context.Organizations.AnyAsync(u => u.Name.ToLower() == dto.Name.ToLower() && u.Id != dto.Id);
                 if (organizationExists)
-                    return Result<UpdateOrganizationDto>.Failure("Organization name already exists", OrganizationError.OrganizationNameAlreadyExists, StatusCodes.Status409Conflict);
+                    return Result<UpdateOrganizationDto>.Failure("Organization name already exists", Errors.OrganizationError.OrganizationNameAlreadyExists);
 
                 organization.Name = dto.Name;
                 organization.Email = dto.Email?.ToLower();
@@ -92,35 +91,10 @@ namespace TaskManagement.Infrastructure.Repositories
             }
             catch (Exception ex)
             {
-                return Result<UpdateOrganizationDto>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
+                return Result<UpdateOrganizationDto>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
             }
         }
 
-    
 
-        public List<UserOrganizationDto> GetAllUsersInOrganization(Guid organizationId)
-        {
-            var users = _context.UserOrganizations
-                            .Where(uo => uo.OrganizationId == organizationId)
-                            .Include(uo => uo.User)
-                            .Select(uo => new UserOrganizationDto
-                            {
-                                UserId = uo.UserId,
-                                FirstName = uo.User.FirstName,
-                                LastName = uo.User.LastName,
-                                Email = uo.User.Email,
-                                UserRole = uo.Role,
-                                UserRoleName = uo.Role.ToString(),
-                                LastLoginDate = uo.User.LastLoginDate,  
-                                IsBlocked = uo.User.IsBlocked,  
-                                BlockReason = uo.User.BlockReason,
-                                BlockEndDate = uo.User.BlockEndDate,
-                                MobileNumber = uo.User.MobileNumber,
-                                CreatedAt = uo.User.CreatedAt,  
-
-                            }).ToList();
-
-            return users;
-        }
     }
 }

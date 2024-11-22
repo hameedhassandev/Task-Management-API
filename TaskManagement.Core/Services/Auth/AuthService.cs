@@ -26,7 +26,7 @@ namespace TaskManagement.Core.Services.Auth
         {
             var emailExistsResult = await _userRepository.IsEmailExist(userDto.EmailAddress);
             if (!emailExistsResult.IsSuccessful || emailExistsResult.Value)
-                return Result<Guid>.Failure(emailExistsResult.Message, emailExistsResult.ErrorType, emailExistsResult.StatusCode ?? StatusCodes.Status400BadRequest);
+                return Result<Guid>.Failure(emailExistsResult.Message, emailExistsResult.Error);
 
             var user = new AddUserDto
             {
@@ -40,12 +40,12 @@ namespace TaskManagement.Core.Services.Auth
 
             var addUserResult = await _userRepository.AddUserAsync(user);
             if (!addUserResult.IsSuccessful)
-                return Result<Guid>.Failure(addUserResult.Message, addUserResult.ErrorType, addUserResult.StatusCode ?? StatusCodes.Status400BadRequest);
+                return Result<Guid>.Failure(addUserResult.Message, addUserResult.Error);
 
             var sendVerificationEmailResult = await _emailSenderService.SendRegistrationVerificationEmailAsync(user.Email, $"{user.FirstName} {user.LastName}", user.EmailVerificationCode);
             if (!sendVerificationEmailResult.IsSuccessful)
-                return Result<Guid>.Failure(sendVerificationEmailResult.Message, sendVerificationEmailResult.ErrorType, sendVerificationEmailResult.StatusCode ?? StatusCodes.Status400BadRequest);
-
+                return Result<Guid>.Failure("User registered successfully but the verification email could not be sent. Please try resending the verification email.", sendVerificationEmailResult.Error);
+                
             return Result<Guid>.Success("User registered successfully, and the verification email was sent", addUserResult.Value);
         }
     }

@@ -31,17 +31,17 @@ namespace TaskManagement.Core.Services.Email
 
                 var emailBodyResult = GetEmailBody(templatePath, placeholders);
                 if (!emailBodyResult.IsSuccessful)
-                    return Result<Nothing>.Failure(emailBodyResult.Message, emailBodyResult.ErrorType, emailBodyResult.StatusCode ?? StatusCodes.Status400BadRequest);
+                    return Result<Nothing>.Failure(emailBodyResult.Message, emailBodyResult.Error);
 
                 var sendEmailResult = await SendEmailAsync(toEmail, "Welcome to Task Management", emailBodyResult.Value);
                 if (!sendEmailResult.IsSuccessful)
-                    return Result<Nothing>.Failure(sendEmailResult.Message, sendEmailResult.ErrorType, sendEmailResult.StatusCode ?? StatusCodes.Status400BadRequest);
+                    return Result<Nothing>.Failure(sendEmailResult.Message, sendEmailResult.Error);
 
                 return Result<Nothing>.Success(emailBodyResult.Message);
             }
             catch (Exception ex)
             {
-                return Result<Nothing>.Failure($"An unexpected error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
+                return Result<Nothing>.Failure($"An unexpected error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
             }
 
         }
@@ -74,13 +74,13 @@ namespace TaskManagement.Core.Services.Email
             catch (SmtpException smtpEx)
             {
                 if (smtpEx.InnerException != null)
-                    return Result<Nothing>.Failure($"Inner Exception: {smtpEx.InnerException.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
+                    return Result<Nothing>.Failure($"Inner Exception: {smtpEx.InnerException.Message}", Errors.ServerError.InternalServerError);
 
-                return Result<Nothing>.Failure($"SMTP error: {smtpEx.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
+                return Result<Nothing>.Failure($"SMTP error: {smtpEx.Message}", Errors.ServerError.InternalServerError);
             }
             catch (Exception ex)
             {
-                return Result<Nothing>.Failure($"An unexpected error occurred: {ex.Message}", ServerError.UnhandledException, StatusCodes.Status500ServerError);
+                return Result<Nothing>.Failure($"An unexpected error occurred: {ex.Message}", Errors.ServerError.UnhandledException);
             }
 
         }
@@ -97,13 +97,13 @@ namespace TaskManagement.Core.Services.Email
                 }
 
                 if (string.IsNullOrEmpty(template))
-                    return Result<string>.Failure("Email template not found", I_O_Error.FileNotFound, StatusCodes.Status500ServerError);
+                    return Result<string>.Failure("Email template not found", Errors.ServerError.InternalServerError);
 
                 return Result<string>.Success("Email body retrieved successfully", template);
             }
             catch (Exception ex)
             {
-                return Result<string>.Failure($"An error occurred: {ex.Message}", ServerError.InternalServerError, StatusCodes.Status500ServerError);
+                return Result<string>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
 
             }
 
