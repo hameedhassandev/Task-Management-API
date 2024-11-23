@@ -15,10 +15,4 @@ namespace TaskManagement.Core.DTOs.Users.Repository
         public string PasswordHash { get; set; }
     }
 
-    public class BlockUserDto
-    {
-        public Guid UserId { get; set; }
-        public string BlockReason { get; set; }
-        public DateTime BlockEndDate { get; set; }
-    }
 }

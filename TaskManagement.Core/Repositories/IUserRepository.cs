@@ -12,11 +12,14 @@ namespace TaskManagement.Core.Repositories
     public interface IUserRepository
     {
         Task<Result<Guid>> AddUserAsync(AddUserDto dto);
-        Task<Result<bool>> IsEmailExist(string email);
-        Task<Result<List<UserOrganizationDto>>> GetAllUsersInOrganization(Guid organizationId);
+        Task<Result<Nothing>> UpdateUserAuthDetailsAsync(UpdateUserAuthDto dto);
+        Task<Result<UserDetailsDto>> GetUserByEmail(string email);
+        Task<Result<bool>> IsEmailExistAsync(string email);
+        Task<Result<List<UserOrganizationDto>>> GetAllUsersInOrganizationAsync(Guid organizationId);
         Task<Result<BlockUserDto>> BlockUserAsync(BlockUserDto dto);
         Task<Result<Nothing>> UnBlockUserAsync(Guid userId);
-        Task<Result<bool>> IsUserBlocked(Guid userId);
+        Task<Result<bool>> IsUserBlockedAsync(Guid userId);
+        Task<Result<Nothing>> UpdateFailedLoginAttemptsAsync(Guid userId, int failedLoginAttempts);
 
 
     }

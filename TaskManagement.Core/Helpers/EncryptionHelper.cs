@@ -12,58 +12,75 @@ namespace TaskManagement.Core.Helpers
         private static readonly string Key = "eXeGymFYP87GAcgag7J72nLPIsY7h6yUChnobI1JcGA=";
         public static string Encrypt(string plainText)
         {
-            byte[] iv = new byte[16];
-            byte[] key = Convert.FromBase64String(Key);
-            byte[] array;
-
-            using (Aes aes = Aes.Create())
+            try
             {
-                aes.Key = key;
-                aes.IV = iv;
+                byte[] key = Convert.FromBase64String(Key);
 
-                ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
-
-                using (MemoryStream memoryStream = new MemoryStream())
+                using (Aes aes = Aes.Create())
                 {
-                    using (CryptoStream cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write))
+                    aes.Key = key;
+                    aes.GenerateIV();
+                    aes.Mode = CipherMode.CBC;
+                    aes.Padding = PaddingMode.PKCS7;
+
+                    using (var encryptor = aes.CreateEncryptor(aes.Key, aes.IV))
+                    using (var memoryStream = new MemoryStream())
                     {
-                        using (StreamWriter streamWriter = new StreamWriter(cryptoStream))
+                        // Write IV to the output stream first
+                        memoryStream.Write(aes.IV, 0, aes.IV.Length);
+
+                        using (var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write))
+                        using (var streamWriter = new StreamWriter(cryptoStream))
                         {
                             streamWriter.Write(plainText);
                         }
 
-                        array = memoryStream.ToArray();
+                        return Convert.ToBase64String(memoryStream.ToArray());
                     }
                 }
             }
-
-            return Convert.ToBase64String(array);
+            catch (Exception ex)
+            {
+                //log
+                return string.Empty;
+            }
         }
 
         public static string Decrypt(string cipherText)
         {
-            byte[] iv = new byte[16];
-            byte[] key = Convert.FromBase64String(Key);
-            byte[] buffer = Convert.FromBase64String(cipherText);
-
-            using (Aes aes = Aes.Create())
+            try
             {
-                aes.Key = key;
-                aes.IV = iv;
+                byte[] key = Convert.FromBase64String(Key);
+                byte[] buffer = Convert.FromBase64String(cipherText);
 
-                ICryptoTransform decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-
-                using (MemoryStream memoryStream = new MemoryStream(buffer))
+                using (Aes aes = Aes.Create())
                 {
-                    using (CryptoStream cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read))
+                    aes.Key = key;
+                    aes.Mode = CipherMode.CBC;
+                    aes.Padding = PaddingMode.PKCS7;
+
+                    // Extract IV from the ciphertext
+                    byte[] iv = new byte[16];
+                    Array.Copy(buffer, 0, iv, 0, iv.Length);
+
+                    aes.IV = iv;
+
+                    using (var decryptor = aes.CreateDecryptor(aes.Key, aes.IV))
+                    using (var memoryStream = new MemoryStream(buffer, iv.Length, buffer.Length - iv.Length))
+                    using (var cryptoStream = new CryptoStream(memoryStream, decryptor, CryptoStreamMode.Read))
+                    using (var streamReader = new StreamReader(cryptoStream))
                     {
-                        using (StreamReader streamReader = new StreamReader(cryptoStream))
-                        {
-                            return streamReader.ReadToEnd();
-                        }
+                        return streamReader.ReadToEnd();
                     }
                 }
+
             }
+            catch (Exception ex)
+            {
+                //log
+                return string.Empty;
+            }
+
         }
     }
 }

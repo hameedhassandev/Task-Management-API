@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TaskManagement.Core.DTOs.Users.Controllers;
 using TaskManagement.Core.DTOs.Users.Repository;
 using TaskManagement.Core.Entities;
 using TaskManagement.Core.Helpers;
@@ -37,7 +38,8 @@ namespace TaskManagement.Infrastructure.Repositories
                     LastName = dto.LastName,
                     PasswordHash = dto.PasswordHash,
                     EmailVerificationCode = dto.EmailVerificationCode,
-                    EmailVerificationCodeExpires = dto.EmailVerificationCodeExpires
+                    EmailVerificationCodeExpires = dto.EmailVerificationCodeExpires,
+                    CreatedAt = DateTime.UtcNow,
                 };
 
                 _context.Users.Add(user);
@@ -51,8 +53,63 @@ namespace TaskManagement.Infrastructure.Repositories
             }
         }
 
+        public async Task<Result<Nothing>> UpdateUserAuthDetailsAsync(UpdateUserAuthDto dto)
+        {
+            try
+            {
+                var user = await _context.Users.FindAsync(dto.UserId);
+                if (user is null)
+                    return Result<Nothing>.Failure("User not found", Errors.UserError.UserNotFound);
 
-        public async Task<Result<bool>> IsEmailExist(string email)
+                user.Id = dto.UserId;
+                user.FailedLoginAttempts = 0;
+                user.LastLoginDate = DateTime.UtcNow;
+                user.IsBlocked = false;
+                user.BlockReason = string.Empty;
+                user.BlockEndDate = null;
+                user.RefreshToken = dto.RefreshToken;
+                user.RefreshTokenExpiryTime = dto.RefreshTokenExpiryTime;
+
+                await _context.SaveChangesAsync();
+                return Result<Nothing>.Success("User auth details is updated successfully");
+            }
+            catch (Exception ex)
+            {
+                return Result<Nothing>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
+            }
+        }
+
+        public async Task<Result<UserDetailsDto>> GetUserByEmail(string email)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == email);
+
+                if (user is null)
+                    return Result<UserDetailsDto>.Failure("User not found", Errors.UserError.UserNotFound);
+
+                var userDetails = new UserDetailsDto
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    PasswordHash = user.PasswordHash,
+                    IsEmailVerified = user.IsEmailVerified,
+                    IsBlocked = user.IsBlocked,
+                    BlockReason = user.BlockReason,
+                    BlockEndDate = user.BlockEndDate,
+                    FailedLoginAttempts = user.FailedLoginAttempts
+                };
+
+                return Result<UserDetailsDto>.Success("User details retrieved successfully", userDetails);
+            }
+            catch (Exception ex) 
+            {
+                return Result<UserDetailsDto>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
+            }
+        }
+        public async Task<Result<bool>> IsEmailExistAsync(string email)
         {
             try
             {
@@ -71,7 +128,7 @@ namespace TaskManagement.Infrastructure.Repositories
             }
         }
 
-        public async Task<Result<List<UserOrganizationDto>>> GetAllUsersInOrganization(Guid organizationId)
+        public async Task<Result<List<UserOrganizationDto>>> GetAllUsersInOrganizationAsync(Guid organizationId)
         {
             try
             {
@@ -109,7 +166,7 @@ namespace TaskManagement.Infrastructure.Repositories
 
         }
 
-        public async Task<Result<bool>> IsUserBlocked(Guid userId)
+        public async Task<Result<bool>> IsUserBlockedAsync(Guid userId)
         {
             try
             {
@@ -141,7 +198,7 @@ namespace TaskManagement.Infrastructure.Repositories
                 user.IsBlocked = true;
                 user.BlockReason = dto.BlockReason;
                 user.BlockEndDate = dto.BlockEndDate;
-                _context.Update(user);
+
                 await _context.SaveChangesAsync();
                 return Result<BlockUserDto>.Success("User has been blocked", new BlockUserDto
                 {
@@ -169,7 +226,7 @@ namespace TaskManagement.Infrastructure.Repositories
                 user.IsBlocked = false;
                 user.BlockReason = string.Empty;
                 user.BlockEndDate = null;
-                _context.Update(user);
+
                 await _context.SaveChangesAsync();
                 return Result<Nothing>.Success("User has been unblocked");
 
@@ -180,7 +237,25 @@ namespace TaskManagement.Infrastructure.Repositories
             }
         }
 
+        public async Task<Result<Nothing>> UpdateFailedLoginAttemptsAsync(Guid userId, int failedLoginAttempts)
+        {
+            try
+            {
+                var user = await _context.Users.FindAsync(userId);
 
+                if (user is null)
+                    return Result<Nothing>.Failure("User not found", Errors.UserError.UserNotFound);
 
+                user.FailedLoginAttempts = failedLoginAttempts;
+         
+                await _context.SaveChangesAsync();
+                return Result<Nothing>.Success("Failed login attempts have been updated successfully");
+
+            }
+            catch (Exception ex)
+            {
+                return Result<Nothing>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
+            }
+        }
     }
 }

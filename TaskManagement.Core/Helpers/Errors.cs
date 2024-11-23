@@ -16,6 +16,7 @@ namespace TaskManagement.Core.Helpers
         public static class AuthenticationError
         {
             public static Error InvalidCredentials => new() { Message = "Invalid credentials", StatusCode = 401 };
+            public static Error InvalidEmailOrPassword => new () { Message = "Invalid email or password", StatusCode = 401 };
             public static Error InvalidOrExpiredToken => new() { Message = "Invalid or expired token", StatusCode = 401 };
         }
         public static class UserError
@@ -23,6 +24,7 @@ namespace TaskManagement.Core.Helpers
             public static Error UserNotFound => new() { Message = "User not found", StatusCode = 404 };
             public static Error EmailAlreadyExists => new() { Message = "Email already exists", StatusCode = 409 };
             public static Error UserIsBlocked => new() { Message = "User is blocked", StatusCode = 403 };
+            public static Error EmailNotVerified => new() { Message = "Email not verified", StatusCode = 403 };
         }
 
         public static class OrganizationError

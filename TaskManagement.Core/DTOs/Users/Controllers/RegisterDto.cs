@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TaskManagement.Core.DTOs.Users.Controllers
 {
-    public class RegisterUserDto
+    public class RegisterDto
     {
         [Required(ErrorMessage = "First name is required")]
         [StringLength(50, ErrorMessage = "First name cannot exceed 50 characters")]

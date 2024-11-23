@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using TaskManagement.Core.DTOs.Projects.Repository;
 using TaskManagement.Core.DTOs.Users.Controllers;
+using TaskManagement.Core.DTOs.Users.Repository;
 using TaskManagement.Core.Helpers;
 using TaskManagement.Core.Services.Auth;
 
@@ -18,7 +19,7 @@ namespace TaskManagement.API.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegisterUserDto userDto)
+        public async Task<IActionResult> Register(RegisterDto userDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -34,6 +35,25 @@ namespace TaskManagement.API.Controllers
                 });
 
             return Ok(ApiResponse<Guid>.Success(result.Message, result.Value, StatusCodes.Status201Created));
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(LoginDto loginDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _authService.LoginAsync(loginDto);
+            if (!result.IsSuccessful)
+                return BadRequest(new ProblemDetails
+                {
+                    Status = result.Error?.StatusCode ?? StatusCodes.Status400BadRequest,
+                    Title = result.Error?.Message ?? "Bad Request",
+                    Detail = result.Message,
+                    Instance = HttpContext.Request.Path
+                });
+
+            return Ok(ApiResponse<LoginResponseDto>.Success(result.Message, result.Value));
         }
     }
 }
