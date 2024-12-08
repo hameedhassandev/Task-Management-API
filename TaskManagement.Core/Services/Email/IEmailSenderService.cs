@@ -11,5 +11,6 @@ namespace TaskManagement.Core.Services.Email
     {
         Task<Result<Nothing>> SendEmailAsync(string toEmail, string subject, string body);
         Task<Result<Nothing>> SendRegistrationVerificationEmailAsync(string toEmail, string fullName, string verificationCode);
+        Task<Result<Nothing>> SendResetPasswordEmailAsync(string toEmail, string resetCode);
     }
 }

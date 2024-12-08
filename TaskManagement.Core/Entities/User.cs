@@ -17,6 +17,9 @@ namespace TaskManagement.Core.Entities
         public bool IsEmailVerified { get; set; }
         public string? EmailVerificationCode { get; set; }
         public DateTime? EmailVerificationCodeExpires { get; set; }
+        public string? PasswordResetCode { get; set; }
+        public DateTime? PasswordResetCodeValidTo { get; set; }
+        public DateTime? LastPasswordResetRequestTime { get; set; }
         public bool IsBlocked { get; set; }
         public string? BlockReason { get; set; }
         public DateTime? BlockEndDate { get; set; }

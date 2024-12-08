@@ -111,6 +111,8 @@ namespace TaskManagement.Core.Services.Auth
 
         }
 
+
+
         private async Task<Result<LoginResponseDto>> HandleFailedLoginAsync(UserDetailsDto userDetails)
         {
             userDetails.FailedLoginAttempts++;
@@ -156,5 +158,29 @@ namespace TaskManagement.Core.Services.Auth
                 TokenExpiresOn = DateTime.Now.AddHours(_jwt.DurationInHours)
             };
         }
+
+        public async Task<Result<Nothing>> ForgotPasswordAsync(ForgotPasswordDto forgotPasswordDto)
+        {
+            var passwordResetCode = AuthHelper.Generate6DigitCode();
+            var updatePasswordCode = new UpdatePasswordCodeDto
+            {
+                Email = forgotPasswordDto.EmailAddress,
+                PasswordResetCode = passwordResetCode,
+                PasswordResetCodeValidTo = DateTime.UtcNow.AddHours(1),
+                LastPasswordResetRequestTime = DateTime.UtcNow,
+            };
+
+            var updatePasswordCodeResult = await _userRepository.UpdatePasswordCodeAsync(updatePasswordCode);
+            if (!updatePasswordCodeResult.IsSuccessful)
+                return Result<Nothing>.Failure(updatePasswordCodeResult.Message, updatePasswordCodeResult.Error);
+
+            //send reset email
+            var sendEmailResult = await _emailSenderService.SendResetPasswordEmailAsync(updatePasswordCode.Email, passwordResetCode);
+            if (!sendEmailResult.IsSuccessful)
+                return Result<Nothing>.Failure("Password reset email could not be sent. Please try again", sendEmailResult.Error);
+
+            return Result<Nothing>.Success("Password reset email sent successfully");
+        }
+
     }
 }

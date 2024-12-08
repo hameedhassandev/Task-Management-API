@@ -18,13 +18,17 @@ namespace TaskManagement.Core.Helpers
             public static Error InvalidCredentials => new() { Message = "Invalid credentials", StatusCode = 401 };
             public static Error InvalidEmailOrPassword => new () { Message = "Invalid email or password", StatusCode = 401 };
             public static Error InvalidOrExpiredToken => new() { Message = "Invalid or expired token", StatusCode = 401 };
+            public static Error InvalidOrExpiredCode => new() { Message = "Invalid or expired verification code", StatusCode = 401 };
         }
         public static class UserError
         {
             public static Error UserNotFound => new() { Message = "User not found", StatusCode = 404 };
             public static Error EmailAlreadyExists => new() { Message = "Email already exists", StatusCode = 409 };
+            public static Error EmailAlreadyVerified => new() { Message = "Email already verified", StatusCode = 409 };
+            
             public static Error UserIsBlocked => new() { Message = "User is blocked", StatusCode = 403 };
             public static Error EmailNotVerified => new() { Message = "Email not verified", StatusCode = 403 };
+            public static Error PasswordResetLimitExceeded => new() { Message = "Password reset limit exceeded ", StatusCode = 429 };//Too Many Requests
         }
 
         public static class OrganizationError

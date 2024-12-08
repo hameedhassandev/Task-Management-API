@@ -13,5 +13,6 @@ namespace TaskManagement.Core.Services.Auth
     {
         Task<Result<Guid>> RegisterAsync(RegisterDto userDto);
         Task<Result<LoginResponseDto>> LoginAsync(LoginDto loginDto);
+        Task<Result<Nothing>> ForgotPasswordAsync(ForgotPasswordDto forgotPasswordDto);
     }
 }

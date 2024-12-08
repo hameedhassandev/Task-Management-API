@@ -46,6 +46,35 @@ namespace TaskManagement.Core.Services.Email
 
         }
 
+
+        public async Task<Result<Nothing>> SendResetPasswordEmailAsync(string toEmail, string resetCode)
+        {
+            try
+            {
+                var templatePath = Path.Combine(Directory.GetCurrentDirectory(), "EmailTemplates", "PasswordResetRequest.html");
+                var placeholders = new Dictionary<string, string>
+                {
+                    { "EmailAddress", toEmail },
+                    { "ResetCode", resetCode },
+                };
+
+                var emailBodyResult = GetEmailBody(templatePath, placeholders);
+                if (!emailBodyResult.IsSuccessful)
+                    return Result<Nothing>.Failure(emailBodyResult.Message, emailBodyResult.Error);
+
+                var sendEmailResult = await SendEmailAsync(toEmail, "Password Reset Request", emailBodyResult.Value);
+                if (!sendEmailResult.IsSuccessful)
+                    return Result<Nothing>.Failure(sendEmailResult.Message, sendEmailResult.Error);
+
+                return Result<Nothing>.Success(emailBodyResult.Message);
+            }
+            catch (Exception ex)
+            {
+                return Result<Nothing>.Failure($"An unexpected error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
+            }
+
+        }
+
         public async Task<Result<Nothing>> SendEmailAsync(string toEmail, string subject, string body)
         {
             try

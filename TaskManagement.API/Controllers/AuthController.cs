@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using TaskManagement.Core.DTOs.Projects.Repository;
 using TaskManagement.Core.DTOs.Users.Controllers;
 using TaskManagement.Core.DTOs.Users.Repository;
 using TaskManagement.Core.Helpers;
+using TaskManagement.Core.Repositories;
 using TaskManagement.Core.Services.Auth;
 
 namespace TaskManagement.API.Controllers
@@ -13,9 +13,11 @@ namespace TaskManagement.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        public AuthController(IAuthService authService)
+        private readonly IUserRepository _userRepository;
+        public AuthController(IAuthService authService, IUserRepository userRepository)
         {
             _authService = authService;
+            _userRepository = userRepository;
         }
 
         [HttpPost("register")]
@@ -54,6 +56,44 @@ namespace TaskManagement.API.Controllers
                 });
 
             return Ok(ApiResponse<LoginResponseDto>.Success(result.Message, result.Value));
+        }
+
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail(VerifyEmailDto verifyEmailDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _userRepository.VerifyEmailAsync(verifyEmailDto);
+            if (!result.IsSuccessful)
+                return BadRequest(new ProblemDetails
+                {
+                    Status = result.Error?.StatusCode ?? StatusCodes.Status400BadRequest,
+                    Title = result.Error?.Message ?? "Bad Request",
+                    Detail = result.Message,
+                    Instance = HttpContext.Request.Path
+                });
+
+            return Ok(ApiResponse<Nothing>.Success(result.Message));
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(ForgotPasswordDto forgotPasswordDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _authService.ForgotPasswordAsync(forgotPasswordDto);
+            if (!result.IsSuccessful)
+                return BadRequest(new ProblemDetails
+                {
+                    Status = result.Error?.StatusCode ?? StatusCodes.Status400BadRequest,
+                    Title = result.Error?.Message ?? "Bad Request",
+                    Detail = result.Message,
+                    Instance = HttpContext.Request.Path
+                });
+
+            return Ok(ApiResponse<Nothing>.Success(result.Message));
         }
     }
 }

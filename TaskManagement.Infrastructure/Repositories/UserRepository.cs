@@ -104,7 +104,7 @@ namespace TaskManagement.Infrastructure.Repositories
 
                 return Result<UserDetailsDto>.Success("User details retrieved successfully", userDetails);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 return Result<UserDetailsDto>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
             }
@@ -125,6 +125,32 @@ namespace TaskManagement.Infrastructure.Repositories
             catch (Exception ex)
             {
                 return Result<bool>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
+            }
+        }
+
+        public async Task<Result<Nothing>> VerifyEmailAsync(VerifyEmailDto verifyEmailDto)
+        {
+            try
+            {
+                var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == verifyEmailDto.EmailAddress);
+
+                if (user is null)
+                    return Result<Nothing>.Failure("User not found", Errors.UserError.UserNotFound);
+
+                if (user.IsEmailVerified)
+                    return Result<Nothing>.Failure($"Email: {verifyEmailDto.EmailAddress} is already verified", Errors.UserError.EmailAlreadyVerified);
+
+                if (user.EmailVerificationCode != verifyEmailDto.EmailVerificationCode || user.EmailVerificationCodeExpires <= DateTime.UtcNow)
+                    return Result<Nothing>.Failure("Invalid or expired verification code. Please request a new one", Errors.AuthenticationError.InvalidOrExpiredCode);
+
+                user.IsEmailVerified = true;
+                await _context.SaveChangesAsync();
+
+                return Result<Nothing>.Success("Your account has been verified successfully");
+            }
+            catch (Exception ex)
+            {
+                return Result<Nothing>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
             }
         }
 
@@ -247,7 +273,7 @@ namespace TaskManagement.Infrastructure.Repositories
                     return Result<Nothing>.Failure("User not found", Errors.UserError.UserNotFound);
 
                 user.FailedLoginAttempts = failedLoginAttempts;
-         
+
                 await _context.SaveChangesAsync();
                 return Result<Nothing>.Success("Failed login attempts have been updated successfully");
 
@@ -256,6 +282,33 @@ namespace TaskManagement.Infrastructure.Repositories
             {
                 return Result<Nothing>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
             }
+        }
+
+        public async Task<Result<Nothing>> UpdatePasswordCodeAsync(UpdatePasswordCodeDto updatePasswordCodeDto)
+        {
+            try
+            {
+                var user = await _context.Users.SingleOrDefaultAsync(x => x.Email == updatePasswordCodeDto.Email);
+                if (user is null)
+                    return Result<Nothing>.Failure("User not found", Errors.UserError.UserNotFound);
+
+                if (user.LastPasswordResetRequestTime.HasValue &&
+                    user.LastPasswordResetRequestTime.Value.AddMinutes(5) > DateTime.UtcNow)
+                    return Result<Nothing>.Failure("You can request a password reset only once every 5 minutes", Errors.UserError.PasswordResetLimitExceeded);
+
+                user.PasswordResetCode = AuthHelper.Generate6DigitCode();
+                user.PasswordResetCodeValidTo = updatePasswordCodeDto.PasswordResetCodeValidTo;
+                user.LastPasswordResetRequestTime = updatePasswordCodeDto.LastPasswordResetRequestTime;
+
+                await _context.SaveChangesAsync();
+
+                return Result<Nothing>.Success("Password reset successfully");
+            }
+            catch (Exception ex)
+            {
+                return Result<Nothing>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
+            }
+
         }
     }
 }
