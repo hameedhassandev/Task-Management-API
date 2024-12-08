@@ -182,5 +182,22 @@ namespace TaskManagement.Core.Services.Auth
             return Result<Nothing>.Success("Password reset email sent successfully");
         }
 
+        public async Task<Result<Nothing>> ResetPasswordAsync(ResetPasswordDto resetPasswordDto)
+        {
+            var updateNewPasswor = new UpdateNewPasswordDto
+            {
+                Email = resetPasswordDto.EmailAddress,
+               ResetCode = resetPasswordDto.ResetCode,
+               NewPasswordHash = EncryptionHelper.Encrypt(resetPasswordDto.NewPassword),
+            };
+
+            var updateNewPassworResult = await _userRepository.UpdateNewPasswordAsync(updateNewPasswor);
+            if (!updateNewPassworResult.IsSuccessful)
+                return Result<Nothing>.Failure(updateNewPassworResult.Message, updateNewPassworResult.Error);
+
+            return Result<Nothing>.Success(updateNewPassworResult.Message);
+        }
+
+
     }
 }

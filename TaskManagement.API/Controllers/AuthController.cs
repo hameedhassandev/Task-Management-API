@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TaskManagement.Core.DTOs.Users.Controllers;
 using TaskManagement.Core.DTOs.Users.Repository;
 using TaskManagement.Core.Helpers;
@@ -77,13 +78,32 @@ namespace TaskManagement.API.Controllers
             return Ok(ApiResponse<Nothing>.Success(result.Message));
         }
 
-        [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword(ForgotPasswordDto forgotPasswordDto)
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordDto forgotPasswordDto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var result = await _authService.ForgotPasswordAsync(forgotPasswordDto);
+            if (!result.IsSuccessful)
+                return BadRequest(new ProblemDetails
+                {
+                    Status = result.Error?.StatusCode ?? StatusCodes.Status400BadRequest,
+                    Title = result.Error?.Message ?? "Bad Request",
+                    Detail = result.Message,
+                    Instance = HttpContext.Request.Path
+                });
+
+            return Ok(ApiResponse<Nothing>.Success(result.Message));
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordDto resetPasswordDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _authService.ResetPasswordAsync(resetPasswordDto);
             if (!result.IsSuccessful)
                 return BadRequest(new ProblemDetails
                 {

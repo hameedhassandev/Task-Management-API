@@ -299,10 +299,32 @@ namespace TaskManagement.Infrastructure.Repositories
                 user.PasswordResetCode = updatePasswordCodeDto.PasswordResetCode;
                 user.PasswordResetCodeValidTo = updatePasswordCodeDto.PasswordResetCodeValidTo;
                 user.LastPasswordResetRequestTime = updatePasswordCodeDto.LastPasswordResetRequestTime;
+                await _context.SaveChangesAsync();
+                return Result<Nothing>.Success("Password reset successfully");
+            }
+            catch (Exception ex)
+            {
+                return Result<Nothing>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
+            }
+        }
+
+        public async Task<Result<Nothing>> UpdateNewPasswordAsync(UpdateNewPasswordDto updateNewPasswordDto)
+        {
+            try
+            {
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == updateNewPasswordDto.Email
+                                    && u.PasswordResetCode == updateNewPasswordDto.ResetCode);
+
+                if (user == null || user.PasswordResetCodeValidTo < DateTime.UtcNow)
+                    return Result<Nothing>.Failure("Invalid email or token, or the token has expired", Errors.AuthenticationError.InvalidOrExpiredCode);
+
+                user.PasswordHash = updateNewPasswordDto.NewPasswordHash;
+                user.PasswordResetCode = null;
+                user.PasswordResetCodeValidTo = null;
 
                 await _context.SaveChangesAsync();
 
-                return Result<Nothing>.Success("Password reset successfully");
+                return Result<Nothing>.Success("Password has been reset successfully");
             }
             catch (Exception ex)
             {
@@ -310,5 +332,6 @@ namespace TaskManagement.Infrastructure.Repositories
             }
 
         }
+
     }
 }
