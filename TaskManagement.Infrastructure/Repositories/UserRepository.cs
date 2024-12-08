@@ -296,7 +296,6 @@ namespace TaskManagement.Infrastructure.Repositories
                     user.LastPasswordResetRequestTime.Value.AddMinutes(5) > DateTime.UtcNow)
                     return Result<Nothing>.Failure("You can request a password reset only once every 5 minutes", Errors.UserError.PasswordResetLimitExceeded);
 
-                user.PasswordResetCode = AuthHelper.Generate6DigitCode();
                 user.PasswordResetCodeValidTo = updatePasswordCodeDto.PasswordResetCodeValidTo;
                 user.LastPasswordResetRequestTime = updatePasswordCodeDto.LastPasswordResetRequestTime;
 
