@@ -333,5 +333,32 @@ namespace TaskManagement.Infrastructure.Repositories
 
         }
 
+
+        public async Task<Result<Nothing>> UpdateOldPasswordAsync(UpdateOldPasswordDto updateOldPasswordDto)
+        {
+            try
+            {
+                var user = await _context.Users.FindAsync(updateOldPasswordDto.UserId);
+
+                if (user is null)
+                    return Result<Nothing>.Failure("User not found", Errors.UserError.UserNotFound);
+
+                if(user.PasswordHash != updateOldPasswordDto.OldPasswordHash)
+                    return Result<Nothing>.Failure("User not found", Errors.AuthenticationError.InvalidOldPassword);
+
+                user.PasswordHash = updateOldPasswordDto.NewPasswordHash;
+
+                await _context.SaveChangesAsync();
+
+                return Result<Nothing>.Success("Password has been changed successfully");
+            }
+            catch (Exception ex)
+            {
+                return Result<Nothing>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
+            }
+
+        }
+
+
     }
 }

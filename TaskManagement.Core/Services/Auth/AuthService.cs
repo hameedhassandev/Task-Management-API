@@ -198,6 +198,21 @@ namespace TaskManagement.Core.Services.Auth
             return Result<Nothing>.Success(updateNewPassworResult.Message);
         }
 
+        public async Task<Result<Nothing>> ChangeOldPasswordAsync(ChangePasswordDto changePasswordDto)
+        {
+            var updateOldPassword = new UpdateOldPasswordDto
+            {
+                UserId = changePasswordDto.UserId,
+                OldPasswordHash = EncryptionHelper.Encrypt(changePasswordDto.OldPassword),
+                NewPasswordHash = EncryptionHelper.Encrypt(changePasswordDto.NewPassword),
+            };
+
+            var updateOldPassworResult = await _userRepository.UpdateOldPasswordAsync(updateOldPassword);
+            if (!updateOldPassworResult.IsSuccessful)
+                return Result<Nothing>.Failure(updateOldPassworResult.Message, updateOldPassworResult.Error);
+
+            return Result<Nothing>.Success(updateOldPassworResult.Message);
+        }
 
     }
 }

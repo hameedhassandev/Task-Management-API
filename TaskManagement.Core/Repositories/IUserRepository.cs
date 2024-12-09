@@ -24,5 +24,6 @@ namespace TaskManagement.Core.Repositories
         Task<Result<Nothing>> VerifyEmailAsync(VerifyEmailDto verifyEmailDto);
         Task<Result<Nothing>> UpdatePasswordCodeAsync(UpdatePasswordCodeDto updatePasswordCodeDto);
         Task<Result<Nothing>> UpdateNewPasswordAsync(UpdateNewPasswordDto updateNewPasswordDto);
+        Task<Result<Nothing>> UpdateOldPasswordAsync(UpdateOldPasswordDto updateOldPasswordDto);
     }
 }

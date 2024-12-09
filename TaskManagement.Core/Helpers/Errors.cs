@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -19,6 +20,7 @@ namespace TaskManagement.Core.Helpers
             public static Error InvalidEmailOrPassword => new () { Message = "Invalid email or password", StatusCode = 401 };
             public static Error InvalidOrExpiredToken => new() { Message = "Invalid or expired token", StatusCode = 401 };
             public static Error InvalidOrExpiredCode => new() { Message = "Invalid or expired verification code", StatusCode = 401 };
+            public static Error InvalidOldPassword => new() { Message = "Invalid old password", StatusCode = 401 };
         }
         public static class UserError
         {

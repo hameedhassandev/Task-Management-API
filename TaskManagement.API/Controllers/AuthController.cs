@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using TaskManagement.API.Extensions;
 using TaskManagement.Core.DTOs.Users.Controllers;
 using TaskManagement.Core.DTOs.Users.Repository;
 using TaskManagement.Core.Helpers;
@@ -29,13 +31,7 @@ namespace TaskManagement.API.Controllers
 
             var result = await _authService.RegisterAsync(userDto);
             if (!result.IsSuccessful)
-                return BadRequest(new ProblemDetails
-                {
-                    Status = result.Error?.StatusCode ?? StatusCodes.Status400BadRequest,
-                    Title = result.Error?.Message ?? "Bad Request",
-                    Detail = result.Message,
-                    Instance = HttpContext.Request.Path
-                });
+                return BadRequest(result.MapToProblemDetails(HttpContext));
 
             return Ok(ApiResponse<Guid>.Success(result.Message, result.Value, StatusCodes.Status201Created));
         }
@@ -48,13 +44,7 @@ namespace TaskManagement.API.Controllers
 
             var result = await _authService.LoginAsync(loginDto);
             if (!result.IsSuccessful)
-                return BadRequest(new ProblemDetails
-                {
-                    Status = result.Error?.StatusCode ?? StatusCodes.Status400BadRequest,
-                    Title = result.Error?.Message ?? "Bad Request",
-                    Detail = result.Message,
-                    Instance = HttpContext.Request.Path
-                });
+                return BadRequest(result.MapToProblemDetails(HttpContext));
 
             return Ok(ApiResponse<LoginResponseDto>.Success(result.Message, result.Value));
         }
@@ -67,13 +57,7 @@ namespace TaskManagement.API.Controllers
 
             var result = await _userRepository.VerifyEmailAsync(verifyEmailDto);
             if (!result.IsSuccessful)
-                return BadRequest(new ProblemDetails
-                {
-                    Status = result.Error?.StatusCode ?? StatusCodes.Status400BadRequest,
-                    Title = result.Error?.Message ?? "Bad Request",
-                    Detail = result.Message,
-                    Instance = HttpContext.Request.Path
-                });
+                return BadRequest(result.MapToProblemDetails(HttpContext));
 
             return Ok(ApiResponse<Nothing>.Success(result.Message));
         }
@@ -86,13 +70,7 @@ namespace TaskManagement.API.Controllers
 
             var result = await _authService.ForgotPasswordAsync(forgotPasswordDto);
             if (!result.IsSuccessful)
-                return BadRequest(new ProblemDetails
-                {
-                    Status = result.Error?.StatusCode ?? StatusCodes.Status400BadRequest,
-                    Title = result.Error?.Message ?? "Bad Request",
-                    Detail = result.Message,
-                    Instance = HttpContext.Request.Path
-                });
+                return BadRequest(result.MapToProblemDetails(HttpContext));
 
             return Ok(ApiResponse<Nothing>.Success(result.Message));
         }
@@ -105,13 +83,21 @@ namespace TaskManagement.API.Controllers
 
             var result = await _authService.ResetPasswordAsync(resetPasswordDto);
             if (!result.IsSuccessful)
-                return BadRequest(new ProblemDetails
-                {
-                    Status = result.Error?.StatusCode ?? StatusCodes.Status400BadRequest,
-                    Title = result.Error?.Message ?? "Bad Request",
-                    Detail = result.Message,
-                    Instance = HttpContext.Request.Path
-                });
+                return BadRequest(result.MapToProblemDetails(HttpContext));
+
+            return Ok(ApiResponse<Nothing>.Success(result.Message));
+        }
+
+
+        [HttpPost("change-password")]
+        public async Task<IActionResult> changePassword(ChangePasswordDto changePasswordDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _authService.ChangeOldPasswordAsync(changePasswordDto);
+            if (!result.IsSuccessful)
+                return BadRequest(result.MapToProblemDetails(HttpContext));
 
             return Ok(ApiResponse<Nothing>.Success(result.Message));
         }

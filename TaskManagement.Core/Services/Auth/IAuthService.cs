@@ -15,5 +15,6 @@ namespace TaskManagement.Core.Services.Auth
         Task<Result<LoginResponseDto>> LoginAsync(LoginDto loginDto);
         Task<Result<Nothing>> ForgotPasswordAsync(ForgotPasswordDto forgotPasswordDto);
         Task<Result<Nothing>> ResetPasswordAsync(ResetPasswordDto resetPasswordDto);
+        Task<Result<Nothing>> ChangeOldPasswordAsync(ChangePasswordDto changePasswordDto);
     }
 }
