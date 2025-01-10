@@ -10,11 +10,13 @@ namespace TaskManagement.Core.Repositories
 {
     public interface IProjectRepository
     {
+        Task<Result<ProjectDto>> GetProjectAsync(Guid id);
         Task<Result<Guid>> AddProjectAsync(AddProjectDto dto);
         Task<Result<UpdateProjectDto>> UpdateProjectAsync(UpdateProjectDto dto);
-        Task<Result<Nothing>> DeleteProjectWithNullifyRelationsAsync(Guid projectId);
-        Task<Result<Nothing>> DeleteProjectWithRelationsAsync(Guid projectId);
-        Task<Result<List<ProjectDto>>> GetOrganizationProjects(Guid organizationId);
+        Task<Result<Nothing>> DeleteProjectWithNullifyTasksAsync(Guid projectId);
+        Task<Result<Nothing>> DeleteProjectWithTasksAsync(Guid projectId);
+        Task<Result<List<ProjectDto>>> GetUserProjectsAsync(Guid userId);
+        Task<Result<List<ProjectDto>>> GetOrganizationProjectsAsync(Guid organizationId);
 
 
 

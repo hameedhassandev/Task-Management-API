@@ -22,6 +22,35 @@ namespace TaskManagement.Infrastructure.Repositories
         {
             _context = context;
         }
+
+        public async Task<Result<ProjectDto>> GetProjectAsync(Guid id)
+        {
+            try
+            {
+                var project = await _context.Projects
+                                .Include(p => p.Tasks)
+                                .FirstOrDefaultAsync(p => p.Id == id);
+                if (project is null)
+                    return Result<ProjectDto>.Failure("Project not found", Errors.ProjectError.ProjectNotFound);
+
+
+
+                return Result<ProjectDto>.Success("Project retrieved successfully", new ProjectDto
+                {
+                    Id = project.Id,
+                    Name = project.Name,
+                    Description = project.Description,
+                    RelatedTaskCount = project.Tasks.Count(),
+                });
+
+            }
+            catch (Exception ex)
+            {
+                return Result<ProjectDto>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
+            }
+
+        }
+
         public async Task<Result<Guid>> AddProjectAsync(AddProjectDto dto)
         {
             try
@@ -31,7 +60,7 @@ namespace TaskManagement.Infrastructure.Repositories
                     return Result<Guid>.Failure("User not found", Errors.UserError.UserNotFound);
 
                 Guid? organizationId = null;
-                if (dto.OrganizationId != Guid.Empty || dto.OrganizationId != null)
+                if (dto.OrganizationId != Guid.Empty && dto.OrganizationId != null)
                 {
                     var organizationExists = await _context.Organizations.AnyAsync(x => x.Id == dto.OrganizationId);
                     if (!organizationExists)
@@ -90,7 +119,7 @@ namespace TaskManagement.Infrastructure.Repositories
             }
         }
 
-        public async Task<Result<Nothing>> DeleteProjectWithNullifyRelationsAsync(Guid projectId)
+        public async Task<Result<Nothing>> DeleteProjectWithNullifyTasksAsync(Guid projectId)
         {
             using (IDbContextTransaction transaction = await _context.Database.BeginTransactionAsync())
             {
@@ -130,7 +159,7 @@ namespace TaskManagement.Infrastructure.Repositories
             }
         }
 
-        public async Task<Result<Nothing>> DeleteProjectWithRelationsAsync(Guid projectId)
+        public async Task<Result<Nothing>> DeleteProjectWithTasksAsync(Guid projectId)
         {
             using (IDbContextTransaction transaction = await _context.Database.BeginTransactionAsync())
             {
@@ -165,7 +194,35 @@ namespace TaskManagement.Infrastructure.Repositories
             }
         }
 
-        public async Task<Result<List<ProjectDto>>> GetOrganizationProjects(Guid organizationId)
+        public async Task<Result<List<ProjectDto>>> GetUserProjectsAsync(Guid userId)
+        {
+            try
+            {
+                var isUserExists = await _context.Users.AnyAsync(u => u.Id == userId);
+                if (!isUserExists)
+                    return Result<List<ProjectDto>>.Failure("User not found", Errors.UserError.UserNotFound);
+
+                var projects = await _context.Projects
+                         .Where(p => p.CreatedByUserId == userId)
+                         .Select(p => new ProjectDto
+                         {
+                             Id = p.Id,
+                             Name = p.Name,
+                             Description = p.Description,
+                             RelatedTaskCount = p.Tasks.Count(),
+
+                         }).ToListAsync();
+
+                return Result<List<ProjectDto>>.Success("Projects retrieved successfully", projects);
+
+            }
+            catch (Exception ex)
+            {
+                return Result<List<ProjectDto>>.Failure($"An error occurred: {ex.Message}", Errors.ServerError.InternalServerError);
+            }
+        }
+
+        public async Task<Result<List<ProjectDto>>> GetOrganizationProjectsAsync(Guid organizationId)
         {
             try
             {
