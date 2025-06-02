@@ -184,6 +184,46 @@ namespace TaskManagement.Infrastructure.Repositories
             {
                 try
                 {
+                    if (taskRequestDto.OrganizationId.HasValue)
+                    {
+                        var isOrganizationExists = await _context.Organizations
+                            .AnyAsync(o => o.Id == taskRequestDto.OrganizationId.Value);
+
+                        if (!isOrganizationExists)
+                            return Result<CreateTaskResponseDto>.Failure("Organization not found", Errors.OrganizationError.OrganizationNotFound);
+                    }
+
+
+                    if (taskRequestDto.ProjectId.HasValue)
+                    {
+                        var isProjectExists = await _context.Projects
+                            .AnyAsync(p => p.Id == taskRequestDto.ProjectId.Value);
+
+                        if (!isProjectExists)
+                            return Result<CreateTaskResponseDto>.Failure("Project not found", Errors.ProjectError.ProjectNotFound);
+                    }
+
+
+                    if (taskRequestDto.AssignedToUserId.HasValue || taskRequestDto.CreatedByUserId != Guid.Empty)
+                    {
+                        var userIds = new List<Guid>();
+                        if (taskRequestDto.CreatedByUserId != Guid.Empty)
+                            userIds.Add(taskRequestDto.CreatedByUserId);
+
+                        if (taskRequestDto.AssignedToUserId.HasValue)
+                            userIds.Add(taskRequestDto.AssignedToUserId.Value);
+
+                        var existingUsers = await _context.Users
+                            .Where(u => userIds.Contains(u.Id))
+                            .Select(u => u.Id)
+                            .ToListAsync();
+
+                        var notFound = userIds.Except(existingUsers).ToList();
+                        if (notFound.Any())
+                            return Result<CreateTaskResponseDto>.Failure($"User(s) not found: {string.Join(", ", notFound)}", Errors.UserError.UserNotFound);
+                    }
+
+
                     if (taskRequestDto.Attachments != null && taskRequestDto.Attachments.Any())
                     {
                         if (taskRequestDto.Attachments.Count > 5)
